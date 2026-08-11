@@ -10,6 +10,9 @@ dist/
 *.log
 npm-debug.log*
 
+# Codex / Superpowers 临时可视化文件
+.superpowers/
+
 # 编辑器
 .vscode/
 .idea/
