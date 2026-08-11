@@ -10,7 +10,10 @@ const router = createRouter({
     { path: '/project/:id', name: 'project', component: ProjectView },
     { path: '/about', name: 'about', component: AboutView }
   ],
-  scrollBehavior() {
+  scrollBehavior(to) {
+    if (to.hash) {
+      return { el: to.hash, top: 86, behavior: 'smooth' }
+    }
     return { top: 0 }
   }
 })

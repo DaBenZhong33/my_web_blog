@@ -21,7 +21,7 @@ const activeScreen = ref(0)
         :style="{ background: `radial-gradient(ellipse, ${project.accent}20, transparent 65%)` }"
       ></div>
       <div class="container p-hero-inner">
-        <RouterLink to="/#projects" class="back-link">← 全部作品</RouterLink>
+        <RouterLink to="/#work" class="back-link">← 全部作品</RouterLink>
         <div class="p-head">
           <AppIcon :name="project.name" :accent="project.accent" :gradient="project.gradient" :size="96" />
           <div>

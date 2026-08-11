@@ -21,7 +21,7 @@ const timeline = [
   <!-- ===== 关于 Hero ===== -->
   <section class="a-hero container">
     <p class="eyebrow">About · 关于</p>
-    <h1 class="a-title">你好，我是 yanfa。</h1>
+    <h1 class="a-title">你好，我是大笨钟。</h1>
     <p class="a-sub">
       一名独立开发者。我相信小团队甚至一个人也能做出被真实用户喜爱的产品。
       这里是我的数字自留地，记录我造的每一个轮子。

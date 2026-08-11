@@ -7,14 +7,14 @@ import { RouterView, RouterLink } from 'vue-router'
     <header class="nav">
       <div class="container nav-inner">
         <RouterLink to="/" class="logo">
-          <span class="logo-mark">Y</span>
-          <span class="logo-text">yanfa<em>.dev</em></span>
+          <span class="logo-mark">钟</span>
+          <span class="logo-text">大笨钟<em> / DEV</em></span>
         </RouterLink>
         <nav class="nav-links">
-          <RouterLink to="/#projects">作品</RouterLink>
+          <RouterLink :to="{ path: '/', hash: '#work' }">作品</RouterLink>
           <RouterLink to="/about">关于</RouterLink>
         </nav>
-        <a class="btn btn-primary nav-cta" href="mailto:hello@example.com" v-magnetic>联系我</a>
+        <a class="btn btn-primary nav-cta" href="mailto:hello@example.com" v-magnetic>邮件</a>
       </div>
     </header>
 
@@ -29,9 +29,9 @@ import { RouterView, RouterLink } from 'vue-router'
     <footer class="footer">
       <div class="container footer-inner">
         <div class="footer-brand">
-          <span class="logo-mark">Y</span>
+          <span class="logo-mark">钟</span>
           <div>
-            <p class="footer-name">yanfa.dev</p>
+            <p class="footer-name">大笨钟 / DEV</p>
             <p class="footer-desc">独立开发者 · 做自己的小产品</p>
           </div>
         </div>
@@ -42,7 +42,7 @@ import { RouterView, RouterLink } from 'vue-router'
         </div>
       </div>
       <div class="container footer-copy">
-        © 2026 yanfa · 用 Vue 3 构建
+        © 2026 大笨钟 · Vue 3 + Vite
       </div>
     </footer>
   </div>
@@ -65,36 +65,37 @@ main {
   top: 0;
   z-index: 50;
   backdrop-filter: blur(16px);
-  background: rgba(20, 20, 20, 0.72);
-  border-bottom: 1px solid var(--border);
+  background: rgba(5, 5, 5, 0.78);
+  border-bottom: 1px solid var(--grid-line);
 }
 
 .nav-inner {
-  height: 64px;
+  height: 72px;
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 30px;
 }
 
 .logo {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 700;
-  font-size: 17px;
+  font-weight: 900;
+  font-size: 19px;
+  text-transform: uppercase;
 }
 
 .logo-mark {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  background: linear-gradient(150deg, #e0b84d, #8a6b1f);
-  color: #141414;
+  width: 38px;
+  height: 32px;
+  border-radius: 0;
+  background: var(--accent);
+  color: #050505;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 900;
   flex: none;
 }
 
@@ -105,36 +106,47 @@ main {
 
 .nav-links {
   display: flex;
-  gap: 26px;
+  gap: 28px;
   margin-left: auto;
 }
 
 .nav-links a {
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
   color: var(--ink-2);
   transition: color 0.2s;
 }
 
 .nav-links a:hover,
 .nav-links a.router-link-active {
-  color: var(--ink-1);
+  color: var(--accent);
 }
 
 .nav-cta {
-  padding: 8px 20px;
-  font-size: 14px;
+  min-height: 42px;
+  padding: 0 22px;
+  font-size: 12px;
 }
 
 @media (max-width: 560px) {
+  .nav-inner {
+    height: 64px;
+  }
+
+  .logo-text em {
+    display: none;
+  }
+
   .nav-cta { display: none; }
 }
 
 /* ===== 页脚 ===== */
 .footer {
-  border-top: 1px solid var(--border);
-  margin-top: 120px;
-  padding: 48px 0 32px;
-  background: var(--surface);
+  border-top: 1px solid var(--grid-line);
+  margin-top: 0;
+  padding: 58px 0 34px;
+  background: #050505;
 }
 
 .footer-inner {
@@ -152,7 +164,8 @@ main {
 }
 
 .footer-name {
-  font-weight: 700;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .footer-desc {
@@ -167,7 +180,9 @@ main {
 
 .footer-links a {
   color: var(--ink-2);
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
   transition: color 0.2s;
 }
 
@@ -178,7 +193,7 @@ main {
 .footer-copy {
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--grid-line);
   color: var(--ink-3);
   font-size: 13px;
 }

@@ -12,6 +12,7 @@ npm-debug.log*
 
 # Codex / Superpowers 临时可视化文件
 .superpowers/
+.codex-*.png
 
 # 编辑器
 .vscode/
