@@ -1,0 +1,319 @@
+/* ===== animos.app 风格设计变量 ===== */
+:root {
+  --bg: #141414;
+  --surface: #1e1e1e;
+  --surface-2: #232324;
+  --surface-3: #2a2a2c;
+  --border: #2e2e31;
+  --ink-1: #f5f5f7;
+  --ink-2: #a7a7a7;
+  --ink-3: #6e6e73;
+  --accent: #e0b84d;
+  --accent-soft: rgba(224, 184, 77, 0.12);
+  --blue: #6798ff;
+  --radius-card: 14px;
+  --radius-inner: 7px;
+  --font-sans: Geist, Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
+    monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg);
+  /* 极客网格背景 */
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 56px 56px;
+  color: var(--ink-1);
+  font-family: var(--font-sans);
+  letter-spacing: -0.014em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: var(--accent);
+  color: #141414;
+}
+
+/* ===== 通用容器 ===== */
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ===== eyebrow 小标签（animos 标志性元素）===== */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 24px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.6;
+}
+
+/* ===== 按钮 ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 12px 26px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), background 0.25s,
+    border-color 0.25s, color 0.25s;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #141414;
+}
+
+.btn-primary:hover {
+  background: #eec95f;
+  transform: translateY(-2px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-1);
+  border-color: var(--border);
+}
+
+.btn-ghost:hover {
+  border-color: var(--ink-3);
+  background: var(--surface);
+  transform: translateY(-2px);
+}
+
+/* ===== 区块标题 ===== */
+.section-title {
+  font-size: clamp(30px, 4.5vw, 46px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin: 18px 0 12px;
+}
+
+.section-sub {
+  color: var(--ink-2);
+  font-size: 17px;
+  max-width: 560px;
+}
+
+/* ===== 卡片 ===== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.35s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: #3d3d41;
+}
+
+/* ===== 标签 ===== */
+.tag {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+  background: var(--surface-2);
+}
+
+/* ===== 滚动渐入动画 ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ===== 渐变流光标题 ===== */
+.shimmer-text {
+  background: linear-gradient(
+    110deg,
+    var(--ink-1) 30%,
+    var(--accent) 46%,
+    #fff2cf 50%,
+    var(--accent) 54%,
+    var(--ink-1) 70%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: shimmer 5.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 120% 0; }
+  55% { background-position: -60% 0; }
+  100% { background-position: -60% 0; }
+}
+
+/* ===== 跑马灯文字带 ===== */
+.marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 22px 0;
+  position: relative;
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+
+.marquee-track {
+  display: inline-flex;
+  gap: 48px;
+  padding-right: 48px;
+  animation: marquee 32s linear infinite;
+  will-change: transform;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+.marquee-item {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--ink-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 48px;
+  transition: color 0.3s;
+}
+
+.marquee-item:hover {
+  color: var(--accent);
+  -webkit-text-stroke-color: var(--accent);
+}
+
+.marquee-item::after {
+  content: "✦";
+  -webkit-text-stroke: 0;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* ===== 页面转场 ===== */
+.page-enter-active {
+  transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.page-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-12px);
+}
+
+/* ===== 浮动几何装饰 ===== */
+.deco {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.55;
+  animation: float 7s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-16px) rotate(6deg); }
+}
+
+/* ===== 3D 倾斜容器 ===== */
+.tilt-scene {
+  perspective: 1200px;
+}
+
+.tilt-body {
+  transition: transform 0.18s ease-out;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .shimmer-text,
+  .marquee-track,
+  .deco {
+    animation: none;
+  }
+
+  .page-enter-active,
+  .page-leave-active {
+    transition: none;
+  }
+}
