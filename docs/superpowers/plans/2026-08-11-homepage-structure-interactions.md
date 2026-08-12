@@ -300,7 +300,7 @@ Run:
 
 ```powershell
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
-rg "�|锟|Ã|Â" src docs
+rg "\x{FFFD}|\x{951F}|\x{00C3}|\x{00C2}" src docs
 ```
 
 Expected: no matches.
