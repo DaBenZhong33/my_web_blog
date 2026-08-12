@@ -12,6 +12,28 @@ defineProps({
 
 const isPreviewOpen = ref(false)
 const hasImageError = ref(false)
+const spotlightStyle = ref({
+  '--spotlight-x': '50%',
+  '--spotlight-y': '42%'
+})
+
+const updateSpotlight = (event) => {
+  const rect = event.currentTarget.getBoundingClientRect()
+  const x = ((event.clientX - rect.left) / rect.width) * 100
+  const y = ((event.clientY - rect.top) / rect.height) * 100
+
+  spotlightStyle.value = {
+    '--spotlight-x': `${Math.min(Math.max(x, 0), 100).toFixed(2)}%`,
+    '--spotlight-y': `${Math.min(Math.max(y, 0), 100).toFixed(2)}%`
+  }
+}
+
+const resetSpotlight = () => {
+  spotlightStyle.value = {
+    '--spotlight-x': '50%',
+    '--spotlight-y': '42%'
+  }
+}
 
 const openPreview = () => {
   isPreviewOpen.value = true
@@ -20,6 +42,7 @@ const openPreview = () => {
 const closePreview = (event) => {
   if (event?.currentTarget?.contains(event.relatedTarget)) return
   isPreviewOpen.value = false
+  resetSpotlight()
 }
 </script>
 
@@ -27,8 +50,9 @@ const closePreview = (event) => {
   <article
     class="project-preview-card corner-frame"
     :class="{ 'preview-open': isPreviewOpen }"
-    :style="{ '--tile-accent': project.accent }"
+    :style="[{ '--tile-accent': project.accent }, spotlightStyle]"
     @mouseenter="openPreview"
+    @mousemove="updateSpotlight"
     @mouseleave="closePreview"
     @focusin="openPreview"
     @focusout="closePreview"
@@ -47,6 +71,8 @@ const closePreview = (event) => {
       aria-hidden="true"
     ></div>
     <div class="project-overlay" aria-hidden="true"></div>
+    <span class="project-spotlight" aria-hidden="true"></span>
+    <span class="project-comet" aria-hidden="true"></span>
 
     <div class="project-meta">
       <span>{{ project.platform }}</span>
@@ -111,11 +137,24 @@ const closePreview = (event) => {
 
 <style scoped>
 .project-preview-card {
+  --spotlight-x: 50%;
+  --spotlight-y: 42%;
   position: relative;
+  isolation: isolate;
   min-height: 540px;
   overflow: hidden;
   background: #101010;
   color: var(--ink-1);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.project-preview-card:hover,
+.project-preview-card:focus-within,
+.project-preview-card.preview-open {
+  border-color: color-mix(in srgb, var(--tile-accent) 72%, var(--accent));
+  box-shadow:
+    0 0 0 1px rgba(215, 255, 0, 0.08),
+    0 24px 70px rgba(0, 0, 0, 0.36);
 }
 
 .project-bg,
@@ -143,6 +182,57 @@ const closePreview = (event) => {
     radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--tile-accent) 45%, transparent), transparent 34%);
 }
 
+.project-spotlight,
+.project-comet {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.project-spotlight {
+  background:
+    radial-gradient(
+      circle at var(--spotlight-x) var(--spotlight-y),
+      color-mix(in srgb, var(--tile-accent) 42%, transparent) 0,
+      rgba(215, 255, 0, 0.12) 16%,
+      transparent 42%
+    ),
+    linear-gradient(
+      135deg,
+      transparent 0 42%,
+      rgba(215, 255, 0, 0.16) 49%,
+      transparent 56% 100%
+    );
+  mix-blend-mode: screen;
+}
+
+.project-comet {
+  background:
+    linear-gradient(
+      115deg,
+      transparent 0 30%,
+      color-mix(in srgb, var(--tile-accent) 72%, transparent) 48%,
+      transparent 62% 100%
+    );
+  transform: translateX(-120%);
+}
+
+.project-preview-card:hover .project-spotlight,
+.project-preview-card:focus-within .project-spotlight,
+.project-preview-card.preview-open .project-spotlight {
+  opacity: 0.86;
+}
+
+.project-preview-card:hover .project-comet,
+.project-preview-card:focus-within .project-comet,
+.project-preview-card.preview-open .project-comet {
+  opacity: 0.42;
+  animation: cardComet 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .project-preview-card:hover .project-bg,
 .project-preview-card:focus-within .project-bg {
   transform: scale(1.06);
@@ -151,7 +241,7 @@ const closePreview = (event) => {
 
 .project-meta {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
@@ -172,7 +262,7 @@ const closePreview = (event) => {
   position: absolute;
   left: 50%;
   top: 47%;
-  z-index: 1;
+  z-index: 2;
   transform: translate(-50%, -50%) scale(0.72);
 }
 
@@ -185,7 +275,7 @@ const closePreview = (event) => {
   left: 18px;
   right: 18px;
   bottom: 112px;
-  z-index: 3;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -288,7 +378,7 @@ const closePreview = (event) => {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 4;
+  z-index: 5;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -365,6 +455,12 @@ const closePreview = (event) => {
   outline-offset: 3px;
 }
 
+@keyframes cardComet {
+  to {
+    transform: translateX(120%);
+  }
+}
+
 @media (max-width: 900px) {
   .project-footer {
     grid-template-columns: auto 1fr;
@@ -402,8 +498,15 @@ const closePreview = (event) => {
 
 @media (prefers-reduced-motion: reduce) {
   .project-bg,
-  .preview-panel {
+  .preview-panel,
+  .project-preview-card,
+  .project-spotlight,
+  .project-comet {
     transition: none;
+  }
+
+  .project-comet {
+    animation: none;
   }
 }
 </style>
