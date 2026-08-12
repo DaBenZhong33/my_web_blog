@@ -7,6 +7,35 @@ const props = defineProps({
 
 const activeIndex = ref(0)
 const activeItem = computed(() => props.items[activeIndex.value] ?? props.items[0])
+
+const tickerDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+const splitTickerValue = (value) => {
+  const text = String(value)
+
+  return text
+    .split(/(\d+[%+]?)/g)
+    .filter(Boolean)
+    .map((part, index) => {
+      const match = part.match(/^(\d+)([%+]?)$/)
+
+      if (!match) {
+        return {
+          key: `${index}-${part}`,
+          type: 'text',
+          value: part
+        }
+      }
+
+      return {
+        key: `${index}-${part}`,
+        type: 'number',
+        value: match[1],
+        suffix: match[2],
+        digits: match[1].split('')
+      }
+    })
+}
 </script>
 
 <template>
@@ -30,7 +59,27 @@ const activeItem = computed(() => props.items[activeIndex.value] ?? props.items[
         @click="activeIndex = index"
       >
         <span>{{ item.label }}</span>
-        <strong>{{ item.value }}</strong>
+        <strong :aria-label="item.value">
+          <template v-for="part in splitTickerValue(item.value)" :key="part.key">
+            <span v-if="part.type === 'text'" aria-hidden="true">{{ part.value }}</span>
+            <span v-else class="number-ticker" aria-hidden="true">
+              <span
+                v-for="(digit, digitIndex) in part.digits"
+                :key="`${part.key}-${digitIndex}`"
+                class="ticker-digit"
+                :style="{
+                  '--ticker-digit': Number(digit),
+                  '--ticker-delay': `${digitIndex * 70}ms`
+                }"
+              >
+                <span class="ticker-digit-strip">
+                  <span v-for="rollDigit in tickerDigits" :key="rollDigit">{{ rollDigit }}</span>
+                </span>
+              </span>
+              <span v-if="part.suffix" class="ticker-suffix">{{ part.suffix }}</span>
+            </span>
+          </template>
+        </strong>
       </button>
     </div>
 
