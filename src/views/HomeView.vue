@@ -5,8 +5,29 @@ import { projects } from '../data/projects.js'
 import SectionRail from '../components/SectionRail.vue'
 import ProjectPreviewCard from '../components/ProjectPreviewCard.vue'
 import HeroMetalCube from '../components/HeroMetalCube.vue'
+import CanvasText from '../components/CanvasText.vue'
 
 const assetBase = '/template-assets/'
+
+const canvasAccentColors = [
+  'rgba(215, 255, 0, 1)',
+  'rgba(215, 255, 0, 0.9)',
+  'rgba(215, 255, 0, 0.78)',
+  'rgba(215, 255, 0, 0.6)',
+  'rgba(215, 255, 0, 0.42)',
+  'rgba(215, 255, 0, 0.24)',
+  'rgba(215, 255, 0, 0.12)'
+]
+
+const canvasInverseColors = [
+  'rgba(5, 5, 5, 1)',
+  'rgba(5, 5, 5, 0.86)',
+  'rgba(5, 5, 5, 0.68)',
+  'rgba(5, 5, 5, 0.5)',
+  'rgba(5, 5, 5, 0.32)',
+  'rgba(5, 5, 5, 0.18)',
+  'rgba(5, 5, 5, 0.1)'
+]
 
 const sections = [
   { id: 'intro', label: 'Intro', title: '首屏' },
@@ -290,7 +311,14 @@ onUnmounted(() => {
           <span>BUILT BY</span>
           <span>大笨钟,</span>
           <span>SHIPPED WITH</span>
-          <span class="marked">CODE SYSTEMS</span>
+          <span class="marked canvas-title-accent">
+            <CanvasText
+              text="CODE SYSTEMS"
+              :colors="canvasAccentColors"
+              :line-gap="4"
+              :animation-duration="20"
+            />
+          </span>
         </h1>
         <p class="hero-sub">
           我把个人产品当成小型系统来做：从设计、代码、数据、自动化到上线维护，
@@ -476,7 +504,17 @@ onUnmounted(() => {
     </div>
     <div class="container cta-content">
       <p class="review-line">★★★★★  欢迎反馈、合作或聊聊独立开发</p>
-      <h2>IT'S TIME TO SHIP YOUR SMALL PRODUCT.</h2>
+      <h2>
+        <span>IT'S TIME TO</span>
+        <CanvasText
+          class="canvas-title-inverse"
+          text="SHIP"
+          :colors="canvasInverseColors"
+          :line-gap="4"
+          :animation-duration="20"
+        />
+        <span>YOUR SMALL PRODUCT.</span>
+      </h2>
       <p>
         如果你也在做一个小产品，或者想讨论设计、前端、移动端与自动化工具，
         可以直接给我写邮件。
@@ -556,6 +594,10 @@ onUnmounted(() => {
   text-decoration-thickness: 3px;
   text-underline-offset: 6px;
   text-decoration-skip-ink: none;
+}
+
+.canvas-title-accent {
+  text-decoration: none;
 }
 
 .hero-sub {
@@ -1167,6 +1209,11 @@ onUnmounted(() => {
   line-height: 0.98;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.final-cta h2 span,
+.final-cta h2 :deep(.canvas-title-inverse) {
+  display: block;
 }
 
 .final-cta p:not(.review-line) {
