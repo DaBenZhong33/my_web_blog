@@ -543,6 +543,7 @@ onUnmounted(() => {
 .zel-hero {
   position: relative;
   isolation: isolate;
+  z-index: 3;
   min-height: 860px;
   overflow: hidden;
   border-bottom: 1px solid var(--grid-line);
@@ -643,7 +644,7 @@ onUnmounted(() => {
 
 .hero-cube {
   position: absolute;
-  right: -40px;
+  right: -22px;
   bottom: -72px;
   width: min(760px, 58vw);
   aspect-ratio: 1;
@@ -930,6 +931,7 @@ onUnmounted(() => {
 }
 
 .project-section {
+  overflow: hidden;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
     #050505;

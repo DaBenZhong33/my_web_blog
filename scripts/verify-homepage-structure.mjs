@@ -95,8 +95,11 @@ for (const pattern of [
   /<LiquidMetalBackdrop[\s\S]*class="hero-liquid-backdrop"/,
   /\.hero-liquid-backdrop/,
   /isolation:\s*isolate/,
+  /\.zel-hero\s*\{[^}]*z-index:\s*3/,
   /\.zel-hero::before[\s\S]*z-index:\s*1/,
-  /\.hero-shell[\s\S]*z-index:\s*2/
+  /\.hero-shell[\s\S]*z-index:\s*2/,
+  /\.hero-cube\s*\{[^}]*right:\s*-22px/,
+  /\.project-section\s*\{[^}]*overflow:\s*hidden/
 ]) {
   expectPattern(files.home, home, pattern)
 }
