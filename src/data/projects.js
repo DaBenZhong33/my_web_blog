@@ -92,6 +92,7 @@ export const projects = [
     tech: ['Cloud Sync', 'Role & Group Logic', 'Local Cache', 'Invite Flow'],
     accent: '#2f7df6',
     gradient: ['#2f7df6', '#0f4ec8'],
+    iconImage: '/project-icons/group-ledger-logo.png',
     screens: ['首页', '群组账本', '结算记录'],
     coverImage: '/project-screens/group-ledger.png',
     screenshots: [

@@ -125,7 +125,13 @@ const closePreview = (event) => {
     </div>
 
     <div class="project-footer">
-      <AppIcon :name="project.name" :accent="project.accent" :gradient="project.gradient" :size="50" />
+      <AppIcon
+        :name="project.name"
+        :accent="project.accent"
+        :gradient="project.gradient"
+        :image="project.iconImage"
+        :size="50"
+      />
       <div class="project-copy">
         <h3>{{ project.name }} <span>{{ project.nameEn }}</span></h3>
         <p>{{ project.slogan }}</p>

@@ -32,7 +32,13 @@ const activeScreenshot = computed(() => (
       <div class="container p-hero-inner">
         <RouterLink to="/#work" class="back-link">← 全部作品</RouterLink>
         <div class="p-head">
-          <AppIcon :name="project.name" :accent="project.accent" :gradient="project.gradient" :size="96" />
+          <AppIcon
+            :name="project.name"
+            :accent="project.accent"
+            :gradient="project.gradient"
+            :image="project.iconImage"
+            :size="96"
+          />
           <div>
             <p class="p-platform">{{ project.platform }}</p>
             <h1 class="p-name">
@@ -131,7 +137,13 @@ const activeScreenshot = computed(() => (
           class="other-card card"
           v-reveal
         >
-          <AppIcon :name="p.name" :accent="p.accent" :gradient="p.gradient" :size="52" />
+          <AppIcon
+            :name="p.name"
+            :accent="p.accent"
+            :gradient="p.gradient"
+            :image="p.iconImage"
+            :size="52"
+          />
           <div>
             <h4>{{ p.name }} <span class="p-en">{{ p.nameEn }}</span></h4>
             <p>{{ p.slogan }}</p>

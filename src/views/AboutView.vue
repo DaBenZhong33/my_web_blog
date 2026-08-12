@@ -62,7 +62,13 @@ const timeline = [
         class="app-row card"
         v-reveal
       >
-        <AppIcon :name="p.name" :accent="p.accent" :gradient="p.gradient" :size="48" />
+        <AppIcon
+          :name="p.name"
+          :accent="p.accent"
+          :gradient="p.gradient"
+          :image="p.iconImage"
+          :size="48"
+        />
         <div class="app-row-info">
           <h4>{{ p.name }} <span class="p-en">{{ p.nameEn }}</span></h4>
           <p>{{ p.description.slice(0, 42) }}…</p>
