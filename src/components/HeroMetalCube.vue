@@ -11,6 +11,7 @@ const isUnfolded = ref(false)
 const FACE_SIZE = 2.35
 const HALF_SIZE = FACE_SIZE / 2
 const ACCENT = 0xd6ff00
+const TEXTURE_SIZE = 512
 
 let scene
 let camera
@@ -83,6 +84,7 @@ const getSettings = () => {
   if (width < 520) {
     return {
       cameraZ: 7.8,
+      unfoldedCameraZ: 9,
       cubeScale: 0.76,
       explodeDistance: 0.72,
       rotationSpeed: 0.006,
@@ -93,6 +95,7 @@ const getSettings = () => {
   if (width < 920) {
     return {
       cameraZ: 7.1,
+      unfoldedCameraZ: 9.15,
       cubeScale: 0.84,
       explodeDistance: 0.86,
       rotationSpeed: 0.007,
@@ -102,6 +105,7 @@ const getSettings = () => {
 
   return {
     cameraZ: 6.8,
+    unfoldedCameraZ: 8.75,
     cubeScale: 0.92,
     explodeDistance: 1,
     rotationSpeed: 0.008,
@@ -113,37 +117,39 @@ const easeOutCubic = (value) => 1 - Math.pow(1 - value, 3)
 
 const createBrushTexture = () => {
   const canvas = document.createElement('canvas')
-  canvas.width = 256
-  canvas.height = 256
+  canvas.width = TEXTURE_SIZE
+  canvas.height = TEXTURE_SIZE
 
   const context = canvas.getContext('2d')
-  const baseGradient = context.createLinearGradient(0, 0, 256, 256)
-  baseGradient.addColorStop(0, '#f4f4ee')
-  baseGradient.addColorStop(0.28, '#858d89')
-  baseGradient.addColorStop(0.62, '#191d1d')
-  baseGradient.addColorStop(1, '#d9ddd6')
-  context.fillStyle = baseGradient
-  context.fillRect(0, 0, 256, 256)
+  context.fillStyle = '#8e948e'
+  context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
 
-  for (let y = 0; y < 256; y += 2) {
-    const shade = 150 + Math.round(Math.sin(y * 0.17) * 38)
-    context.fillStyle = `rgba(${shade}, ${shade}, ${shade}, ${y % 8 === 0 ? 0.28 : 0.12})`
-    context.fillRect(0, y, 256, 1)
+  for (let y = 0; y < TEXTURE_SIZE; y += 1) {
+    const wave = Math.sin(y * 0.065) * 9 + Math.sin(y * 0.21) * 5
+    const shade = 142 + Math.round(wave)
+    context.fillStyle = `rgba(${shade}, ${shade}, ${shade}, ${y % 5 === 0 ? 0.2 : 0.1})`
+    context.fillRect(0, y, TEXTURE_SIZE, 1)
+  }
+
+  for (let y = 0; y < TEXTURE_SIZE; y += 7) {
+    const offset = Math.sin(y * 0.37) * 18
+    context.fillStyle = 'rgba(255, 255, 255, 0.055)'
+    context.fillRect(Math.max(0, offset), y, TEXTURE_SIZE - Math.abs(offset), 1)
   }
 
   context.globalCompositeOperation = 'screen'
-  const highlight = context.createLinearGradient(0, 0, 256, 0)
-  highlight.addColorStop(0, 'rgba(255,255,255,0.08)')
-  highlight.addColorStop(0.48, 'rgba(255,255,255,0.28)')
-  highlight.addColorStop(1, 'rgba(255,255,255,0.02)')
+  const highlight = context.createLinearGradient(0, 0, TEXTURE_SIZE, 0)
+  highlight.addColorStop(0, 'rgba(255,255,255,0.04)')
+  highlight.addColorStop(0.5, 'rgba(255,255,255,0.16)')
+  highlight.addColorStop(1, 'rgba(255,255,255,0.04)')
   context.fillStyle = highlight
-  context.fillRect(0, 0, 256, 256)
+  context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
 
   const texture = new THREE.CanvasTexture(canvas)
   texture.colorSpace = THREE.SRGBColorSpace
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
-  texture.repeat.set(1, 2)
+  texture.repeat.set(1, 1)
 
   return texture
 }
@@ -211,6 +217,7 @@ const animate = (time) => {
   if (Math.abs(unfoldTarget - unfoldProgress) < 0.001) unfoldProgress = unfoldTarget
 
   const speed = THREE.MathUtils.lerp(settings.rotationSpeed, settings.unfoldedSpeed, unfoldProgress)
+  camera.position.z = THREE.MathUtils.lerp(settings.cameraZ, settings.unfoldedCameraZ, unfoldProgress)
   cubeGroup.rotation.y += speed * delta
   cubeGroup.rotation.x = -0.26 + Math.sin(time * 0.00045) * 0.035
   cubeGroup.rotation.z = Math.sin(time * 0.00032) * 0.018

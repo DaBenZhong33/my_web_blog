@@ -180,6 +180,10 @@ for (const pattern of [
   /webgl-fallback/,
   /is-unfolded/,
   /createBrushTexture/,
+  /TEXTURE_SIZE/,
+  /texture\.repeat\.set\(1, 1\)/,
+  /unfoldedCameraZ/,
+  /camera\.position\.z = THREE\.MathUtils\.lerp\(settings\.cameraZ, settings\.unfoldedCameraZ, unfoldProgress\)/,
   /triggerTouchUnfold/,
   /disposeThreeScene/
 ]) {
@@ -187,6 +191,13 @@ for (const pattern of [
 }
 
 expectPattern(files.packageJson, packageJson, /"three":/)
+
+for (const pattern of [
+  /baseGradient\.addColorStop\(0\.62/,
+  /baseGradient\.addColorStop\(1,\s*'#d9ddd6'\)/
+]) {
+  rejectPattern(files.heroCube, heroCube, pattern)
+}
 
 if (failures.length) {
   console.error('Homepage structure verification failed:')
