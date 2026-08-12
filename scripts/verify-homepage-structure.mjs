@@ -7,7 +7,8 @@ const files = {
   home: 'src/views/HomeView.vue',
   rail: 'src/components/SectionRail.vue',
   terminal: 'src/components/StatusTerminal.vue',
-  preview: 'src/components/ProjectPreviewCard.vue'
+  preview: 'src/components/ProjectPreviewCard.vue',
+  style: 'src/style.css'
 }
 
 const failures = []
@@ -29,10 +30,11 @@ const home = readUtf8(files.home)
 const rail = readUtf8(files.rail)
 const terminal = readUtf8(files.terminal)
 const preview = readUtf8(files.preview)
+const style = readUtf8(files.style)
 
 const garbledPattern = /[\uFFFD\u951F\u00C3\u00C2]/
 
-for (const [label, content] of Object.entries({ home, rail, terminal, preview })) {
+for (const [label, content] of Object.entries({ home, rail, terminal, preview, style })) {
   if (garbledPattern.test(content)) failures.push(`${label} contains garbled text marker`)
 }
 
@@ -53,6 +55,15 @@ for (const pattern of [
   /<SectionRail[\s\S]*@navigate="navigateToSection"/,
   /<StatusTerminal\s+:items="statusItems"/,
   /<ProjectPreviewCard/
+]) {
+  expectPattern(files.home, home, pattern)
+}
+
+for (const pattern of [
+  /class="marked glitch-reveal"/,
+  /data-text="CODE SYSTEMS"/,
+  /metric-ticker/,
+  /splitTickerValue\(metric\.value\)/
 ]) {
   expectPattern(files.home, home, pattern)
 }
@@ -81,6 +92,15 @@ for (const pattern of [
 }
 
 for (const pattern of [
+  /const tickerDigits = \[/,
+  /const splitTickerValue = \(value\) =>/,
+  /number-ticker/,
+  /ticker-digit-strip/
+]) {
+  expectPattern(files.terminal, terminal, pattern)
+}
+
+for (const pattern of [
   /import \{ RouterLink \} from 'vue-router'/,
   /import PhoneMockup from '\.\/PhoneMockup\.vue'/,
   /import AppIcon from '\.\/AppIcon\.vue'/,
@@ -96,6 +116,26 @@ for (const pattern of [
   /preview-open/
 ]) {
   expectPattern(files.preview, preview, pattern)
+}
+
+for (const pattern of [
+  /spotlightStyle = ref/,
+  /const updateSpotlight = \(event\) =>/,
+  /--spotlight-x/,
+  /project-spotlight/,
+  /project-comet/
+]) {
+  expectPattern(files.preview, preview, pattern)
+}
+
+for (const pattern of [
+  /@keyframes digitTicker/,
+  /@keyframes glitchReveal/,
+  /--btn-shimmer/,
+  /signal-strip::before/,
+  /prefers-reduced-motion: reduce[\s\S]*ticker-digit-strip/
+]) {
+  expectPattern(files.style, style, pattern)
 }
 
 if (failures.length) {
