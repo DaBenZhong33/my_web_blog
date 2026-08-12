@@ -143,67 +143,7 @@ const formatIndex = (index) => String(index + 1).padStart(2, '0')
 
 @media (max-width: 1760px) {
   .section-rail {
-    position: sticky;
-    top: 72px;
-    z-index: 45;
-    display: block;
-    width: 100%;
-    padding: 10px 16px;
-    border-top: 1px solid var(--grid-line);
-    border-bottom: 1px solid var(--grid-line);
-    background: rgba(5, 5, 5, 0.9);
-    backdrop-filter: blur(14px);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .section-rail::-webkit-scrollbar {
     display: none;
-  }
-
-  .rail-meter {
-    width: 100%;
-    min-height: 2px;
-    margin-bottom: 10px;
-  }
-
-  .rail-meter span {
-    width: var(--rail-progress);
-    height: 100%;
-    transition: width 0.18s ease;
-  }
-
-  .rail-items {
-    display: inline-flex;
-    min-width: max-content;
-    flex-direction: row;
-    gap: 8px;
-  }
-
-  .rail-item {
-    display: inline-flex;
-    width: auto;
-    min-height: 36px;
-    align-items: center;
-    gap: 8px;
-    padding: 0 12px;
-    border: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.06);
-  }
-
-  .rail-item.active {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-  }
-
-  .rail-title {
-    display: none;
-  }
-}
-
-@media (max-width: 560px) {
-  .section-rail {
-    top: 64px;
   }
 }
 

@@ -45,7 +45,7 @@ const activeScreen = ref(0)
     <section class="section container">
       <p class="eyebrow" v-reveal>Screenshots · 界面</p>
       <h2 class="section-title" v-reveal>长这样。</h2>
-      <p class="section-sub" v-reveal>占位界面 —— 替换为真实截图后效果拉满。</p>
+      <p class="section-sub" v-reveal>围绕核心使用场景整理界面结构，展示这个产品最重要的交互路径。</p>
 
       <div class="screens" v-reveal>
         <div class="screens-stage" v-tilt="10">

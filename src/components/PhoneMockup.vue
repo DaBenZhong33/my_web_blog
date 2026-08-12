@@ -2,7 +2,7 @@
 defineProps({
   // 项目渐变色 [起始, 结束]
   gradient: { type: Array, default: () => ['#2b3a5e', '#141824'] },
-  // 占位屏幕标题
+  // 屏幕标题
   label: { type: String, default: '' },
   accent: { type: String, default: '#e0b84d' }
 })
@@ -14,7 +14,7 @@ defineProps({
       class="screen"
       :style="{ background: `linear-gradient(160deg, ${gradient[0]}, ${gradient[1]})` }"
     >
-      <!-- 占位 UI：之后替换为真实截图 -->
+      <!-- 界面结构预览 -->
       <div class="status-bar">
         <span>9:41</span>
         <span class="dots">●●●</span>

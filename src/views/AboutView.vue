@@ -4,16 +4,16 @@ import { projects } from '../data/projects.js'
 import AppIcon from '../components/AppIcon.vue'
 
 const skills = [
-  'Swift / SwiftUI', 'Kotlin / Compose', 'Flutter', 'Vue / TypeScript',
-  'Node.js', 'UI 设计', 'App Store 运营', '产品策划'
+  '移动端产品设计', '日历与日程体验', '点餐流程设计', '多人账单逻辑',
+  '状态管理', '本地数据', '图片列表优化', '产品策划'
 ]
 
 const timeline = [
-  { year: '2021', text: '写下第一行独立产品代码，第一个 App 上架 3 天后下架——教训深刻。' },
-  { year: '2022', text: '发布「拾光日记」，第一次收到陌生人的感谢邮件。' },
-  { year: '2024', text: '「番茄岛」上线，游戏化专注玩法获得首批 1000 名用户。' },
-  { year: '2025', text: '「一本账」发布，开始学习 Kotlin Multiplatform 跨端方案。' },
-  { year: '2026', text: '继续打磨中——下一个产品正在酝酿。' }
+  { year: '2023', text: '开始系统练习移动端产品，从信息架构、列表密度和底部导航这些基础体验做起。' },
+  { year: '2024', text: '完成「每日计划」的核心原型，把日历、日程和待办整合到同一个使用路径里。' },
+  { year: '2025', text: '打磨「今日菜单」，重点优化菜品分类、双列浏览、选择反馈和底部确认流程。' },
+  { year: '2026', text: '继续完善「群组记账」，处理多人账单里的待付、待收、已结清和群组协作状态。' },
+  { year: '现在', text: '围绕真实使用场景继续迭代，把作品从界面截图推进到可长期维护的完整产品。' }
 ]
 </script>
 

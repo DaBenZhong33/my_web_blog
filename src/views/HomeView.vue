@@ -181,13 +181,8 @@ const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: r
 
 const getScrollOffset = () => {
   const navHeight = document.querySelector('.nav')?.getBoundingClientRect().height ?? 0
-  const rail = document.querySelector('.section-rail')
-  const railStyles = rail ? window.getComputedStyle(rail) : null
-  const railHeight = railStyles?.position === 'sticky'
-    ? rail.getBoundingClientRect().height
-    : 0
 
-  return navHeight + railHeight + 12
+  return navHeight + 16
 }
 
 const navigateToSection = (id) => {
@@ -464,6 +459,15 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+#intro,
+#build,
+#story,
+#work,
+#process,
+#contact {
+  scroll-margin-top: 88px;
+}
+
 .zel-hero {
   position: relative;
   min-height: 860px;
