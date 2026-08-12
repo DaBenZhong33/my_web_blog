@@ -5,6 +5,7 @@ import { projects } from '../data/projects.js'
 import SectionRail from '../components/SectionRail.vue'
 import ProjectPreviewCard from '../components/ProjectPreviewCard.vue'
 import HeroMetalCube from '../components/HeroMetalCube.vue'
+import LiquidMetalBackdrop from '../components/LiquidMetalBackdrop.vue'
 import CanvasText from '../components/CanvasText.vue'
 
 const assetBase = '/template-assets/'
@@ -304,6 +305,8 @@ onUnmounted(() => {
   />
 
   <section id="intro" class="zel-hero">
+    <LiquidMetalBackdrop class="hero-liquid-backdrop" />
+
     <div class="container hero-shell">
       <div class="hero-copy">
         <p class="eyebrow">Independent App Studio · 独立开发者</p>
@@ -539,6 +542,7 @@ onUnmounted(() => {
 
 .zel-hero {
   position: relative;
+  isolation: isolate;
   min-height: 860px;
   overflow: hidden;
   border-bottom: 1px solid var(--grid-line);
@@ -552,14 +556,21 @@ onUnmounted(() => {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 1;
   background: url("/template-assets/noise-texture.png") top center / cover no-repeat;
   opacity: 0.34;
   pointer-events: none;
 }
 
+.hero-liquid-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
 .hero-shell {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   min-height: 800px;
   display: grid;
   grid-template-columns: minmax(0, 0.92fr) minmax(500px, 1.08fr);
@@ -644,6 +655,7 @@ onUnmounted(() => {
   position: absolute;
   left: -18px;
   bottom: -48px;
+  z-index: 1;
   color: rgba(255, 255, 255, 0.035);
   font-size: 160px;
   line-height: 0.8;

@@ -10,6 +10,7 @@ const files = {
   style: 'src/style.css',
   heroCube: 'src/components/HeroMetalCube.vue',
   canvasText: 'src/components/CanvasText.vue',
+  liquidMetalBackdrop: 'src/components/LiquidMetalBackdrop.vue',
   packageJson: 'package.json'
 }
 
@@ -38,11 +39,12 @@ const preview = readUtf8(files.preview)
 const style = readUtf8(files.style)
 const heroCube = readUtf8(files.heroCube)
 const canvasText = readUtf8(files.canvasText)
+const liquidMetalBackdrop = readUtf8(files.liquidMetalBackdrop)
 const packageJson = readUtf8(files.packageJson)
 
 const garbledPattern = /[\uFFFD\u951F\u00C3\u00C2]/
 
-for (const [label, content] of Object.entries({ home, rail, preview, style, heroCube, canvasText })) {
+for (const [label, content] of Object.entries({ home, rail, preview, style, heroCube, canvasText, liquidMetalBackdrop })) {
   if (garbledPattern.test(content)) failures.push(`${label} contains garbled text marker`)
 }
 
@@ -84,6 +86,17 @@ for (const pattern of [
   /class="hero-frame"/,
   /class="hero-cube"/,
   /min-height:\s*690px/
+]) {
+  expectPattern(files.home, home, pattern)
+}
+
+for (const pattern of [
+  /import LiquidMetalBackdrop from '\.\.\/components\/LiquidMetalBackdrop\.vue'/,
+  /<LiquidMetalBackdrop[\s\S]*class="hero-liquid-backdrop"/,
+  /\.hero-liquid-backdrop/,
+  /isolation:\s*isolate/,
+  /\.zel-hero::before[\s\S]*z-index:\s*1/,
+  /\.hero-shell[\s\S]*z-index:\s*2/
 ]) {
   expectPattern(files.home, home, pattern)
 }
@@ -237,7 +250,26 @@ for (const pattern of [
   expectPattern(files.heroCube, heroCube, pattern)
 }
 
+for (const pattern of [
+  /from '@paper-design\/shaders'/,
+  /ShaderMount/,
+  /liquidMetalFragmentShader/,
+  /LiquidMetalShapes/,
+  /getShaderColorFromString/,
+  /supportsWebgl2/,
+  /prefers-reduced-motion: reduce/,
+  /dispose/,
+  /maxPixelCount/,
+  /aria-hidden="true"/,
+  /liquid-metal-backdrop__canvas/,
+  /liquid-metal-backdrop__fallback/,
+  /pointer-events:\s*none/
+]) {
+  expectPattern(files.liquidMetalBackdrop, liquidMetalBackdrop, pattern)
+}
+
 expectPattern(files.packageJson, packageJson, /"three":/)
+expectPattern(files.packageJson, packageJson, /@paper-design\/shaders":\s*"0\.0\.80"/)
 
 for (const pattern of [
   /baseGradient\.addColorStop\(0\.62/,
