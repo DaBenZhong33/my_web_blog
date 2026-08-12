@@ -31,6 +31,7 @@ const faceDefinitions = [
     name: 'front',
     closedPosition: new THREE.Vector3(0, 0, HALF_SIZE),
     normal: new THREE.Vector3(0, 0, 1),
+    openPosition: new THREE.Vector3(0.08, 0, 2.25),
     closedRotation: new THREE.Euler(0, 0, 0),
     openRotation: new THREE.Euler(0.24, -0.18, 0.16)
   },
@@ -38,6 +39,7 @@ const faceDefinitions = [
     name: 'back',
     closedPosition: new THREE.Vector3(0, 0, -HALF_SIZE),
     normal: new THREE.Vector3(0, 0, -1),
+    openPosition: new THREE.Vector3(-0.14, 0.02, -2.45),
     closedRotation: new THREE.Euler(0, Math.PI, 0),
     openRotation: new THREE.Euler(-0.22, Math.PI + 0.24, -0.18)
   },
@@ -45,6 +47,7 @@ const faceDefinitions = [
     name: 'right',
     closedPosition: new THREE.Vector3(HALF_SIZE, 0, 0),
     normal: new THREE.Vector3(1, 0, 0),
+    openPosition: new THREE.Vector3(2.85, 0.14, 0.12),
     closedRotation: new THREE.Euler(0, Math.PI / 2, 0),
     openRotation: new THREE.Euler(0.18, Math.PI / 2 + 0.28, 0.22)
   },
@@ -52,6 +55,7 @@ const faceDefinitions = [
     name: 'left',
     closedPosition: new THREE.Vector3(-HALF_SIZE, 0, 0),
     normal: new THREE.Vector3(-1, 0, 0),
+    openPosition: new THREE.Vector3(-2.85, -0.14, -0.1),
     closedRotation: new THREE.Euler(0, -Math.PI / 2, 0),
     openRotation: new THREE.Euler(-0.2, -Math.PI / 2 - 0.26, -0.24)
   },
@@ -59,6 +63,7 @@ const faceDefinitions = [
     name: 'top',
     closedPosition: new THREE.Vector3(0, HALF_SIZE, 0),
     normal: new THREE.Vector3(0, 1, 0),
+    openPosition: new THREE.Vector3(0.18, 2.65, 0.06),
     closedRotation: new THREE.Euler(-Math.PI / 2, 0, 0),
     openRotation: new THREE.Euler(-Math.PI / 2 - 0.3, 0.2, -0.2)
   },
@@ -66,6 +71,7 @@ const faceDefinitions = [
     name: 'bottom',
     closedPosition: new THREE.Vector3(0, -HALF_SIZE, 0),
     normal: new THREE.Vector3(0, -1, 0),
+    openPosition: new THREE.Vector3(-0.18, -2.65, 0.08),
     closedRotation: new THREE.Euler(Math.PI / 2, 0, 0),
     openRotation: new THREE.Euler(Math.PI / 2 + 0.28, -0.18, 0.2)
   }
@@ -77,8 +83,8 @@ const getSettings = () => {
   if (width < 520) {
     return {
       cameraZ: 7.8,
-      cubeScale: 0.82,
-      explodeDistance: 2.75,
+      cubeScale: 0.76,
+      explodeDistance: 0.72,
       rotationSpeed: 0.006,
       unfoldedSpeed: 0.0018
     }
@@ -87,17 +93,17 @@ const getSettings = () => {
   if (width < 920) {
     return {
       cameraZ: 7.1,
-      cubeScale: 0.92,
-      explodeDistance: 3.15,
+      cubeScale: 0.84,
+      explodeDistance: 0.86,
       rotationSpeed: 0.007,
       unfoldedSpeed: 0.002
     }
   }
 
   return {
-    cameraZ: 6.4,
-    cubeScale: 1,
-    explodeDistance: 3.55,
+    cameraZ: 6.8,
+    cubeScale: 0.92,
+    explodeDistance: 1,
     rotationSpeed: 0.008,
     unfoldedSpeed: 0.0024
   }
@@ -150,7 +156,7 @@ const updateFaceTargets = () => {
 
   for (const face of cubeGroup.userData.faces) {
     const { definition } = face.userData
-    face.userData.openPosition.copy(definition.normal).multiplyScalar(settings.explodeDistance)
+    face.userData.openPosition.copy(definition.openPosition).multiplyScalar(settings.explodeDistance)
   }
 }
 
@@ -264,7 +270,7 @@ const createFace = (definition) => {
   group.rotation.copy(definition.closedRotation)
   group.userData = {
     definition,
-    openPosition: definition.normal.clone().multiplyScalar(getSettings().explodeDistance)
+    openPosition: definition.openPosition.clone().multiplyScalar(getSettings().explodeDistance)
   }
 
   return group
@@ -277,6 +283,7 @@ const createScene = () => {
   renderer = new THREE.WebGLRenderer({
     alpha: true,
     antialias: true,
+    preserveDrawingBuffer: true,
     powerPreference: 'high-performance'
   })
   renderer.setClearColor(0x000000, 0)

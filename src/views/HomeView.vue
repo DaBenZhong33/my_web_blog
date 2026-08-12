@@ -1300,12 +1300,12 @@ onUnmounted(() => {
   }
 
   .hero-visual {
-    min-height: 520px;
+    min-height: 420px;
   }
 
   .hero-cube {
-    bottom: -38px;
-    width: min(520px, 112vw);
+    bottom: 8px;
+    width: min(430px, 104vw);
   }
 
   .hero-wordmark {
