@@ -7,7 +7,9 @@ const files = {
   home: 'src/views/HomeView.vue',
   rail: 'src/components/SectionRail.vue',
   preview: 'src/components/ProjectPreviewCard.vue',
-  style: 'src/style.css'
+  style: 'src/style.css',
+  heroCube: 'src/components/HeroMetalCube.vue',
+  packageJson: 'package.json'
 }
 
 const failures = []
@@ -33,10 +35,12 @@ const home = readUtf8(files.home)
 const rail = readUtf8(files.rail)
 const preview = readUtf8(files.preview)
 const style = readUtf8(files.style)
+const heroCube = readUtf8(files.heroCube)
+const packageJson = readUtf8(files.packageJson)
 
 const garbledPattern = /[\uFFFD\u951F\u00C3\u00C2]/
 
-for (const [label, content] of Object.entries({ home, rail, preview, style })) {
+for (const [label, content] of Object.entries({ home, rail, preview, style, heroCube })) {
   if (garbledPattern.test(content)) failures.push(`${label} contains garbled text marker`)
 }
 
@@ -53,7 +57,9 @@ for (const pattern of [
   /IntersectionObserver/,
   /requestAnimationFrame/,
   /<SectionRail[\s\S]*@navigate="navigateToSection"/,
-  /<ProjectPreviewCard/
+  /<ProjectPreviewCard/,
+  /import HeroMetalCube from '\.\.\/components\/HeroMetalCube\.vue'/,
+  /<HeroMetalCube[\s\S]*class="hero-cube"/
 ]) {
   expectPattern(files.home, home, pattern)
 }
@@ -67,7 +73,9 @@ for (const pattern of [
   /bookPageStyles/,
   /scroll-margin-top:\s*88px/,
   /text-decoration-thickness:\s*3px/,
-  /opacity:\s*0\.76/
+  /class="hero-frame"/,
+  /class="hero-cube"/,
+  /min-height:\s*690px/
 ]) {
   expectPattern(files.home, home, pattern)
 }
@@ -88,6 +96,14 @@ for (const pattern of [
   /const avatars = \[/,
   /class="trust-row"/,
   /class="stars"/
+]) {
+  rejectPattern(files.home, home, pattern)
+}
+
+for (const pattern of [
+  /hero-ai\.png/,
+  /class="hero-person"/,
+  /AI 与人类协作的半机械人物/
 ]) {
   rejectPattern(files.home, home, pattern)
 }
@@ -151,6 +167,26 @@ for (const pattern of [
 ]) {
   rejectPattern(files.style, style, pattern)
 }
+
+for (const pattern of [
+  /from 'three'/,
+  /WebGLRenderer/,
+  /MeshStandardMaterial/,
+  /CanvasTexture/,
+  /PlaneGeometry/,
+  /ResizeObserver/,
+  /prefers-reduced-motion: reduce/,
+  /hero-metal-cube/,
+  /webgl-fallback/,
+  /is-unfolded/,
+  /createBrushTexture/,
+  /triggerTouchUnfold/,
+  /disposeThreeScene/
+]) {
+  expectPattern(files.heroCube, heroCube, pattern)
+}
+
+expectPattern(files.packageJson, packageJson, /"three":/)
 
 if (failures.length) {
   console.error('Homepage structure verification failed:')

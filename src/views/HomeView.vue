@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { projects } from '../data/projects.js'
 import SectionRail from '../components/SectionRail.vue'
 import ProjectPreviewCard from '../components/ProjectPreviewCard.vue'
+import HeroMetalCube from '../components/HeroMetalCube.vue'
 
 const assetBase = '/template-assets/'
 
@@ -304,11 +305,7 @@ onUnmounted(() => {
 
       <div class="hero-visual" ref="heroVisual" v-reveal>
         <div class="hero-frame">
-          <img
-            class="hero-person"
-            src="/template-assets/hero-ai.png"
-            alt="AI 与人类协作的半机械人物"
-          />
+          <HeroMetalCube class="hero-cube" />
         </div>
       </div>
     </div>
@@ -587,17 +584,18 @@ onUnmounted(() => {
 .hero-frame {
   position: absolute;
   inset: 0 -18px 0 0;
+  overflow: visible;
+  pointer-events: none;
 }
 
-.hero-person {
+.hero-cube {
   position: absolute;
   right: -40px;
-  bottom: -90px;
+  bottom: -72px;
   width: min(760px, 58vw);
+  aspect-ratio: 1;
   max-width: none;
-  opacity: 0.76;
-  filter: saturate(0.7) brightness(0.82) contrast(1);
-  mix-blend-mode: lighten;
+  pointer-events: auto;
 }
 
 .hero-wordmark {
@@ -1231,8 +1229,9 @@ onUnmounted(() => {
     inset: 0;
   }
 
-  .hero-person {
+  .hero-cube {
     right: 50%;
+    bottom: -72px;
     transform: translateX(50%);
     width: min(720px, 96vw);
   }
@@ -1304,6 +1303,11 @@ onUnmounted(() => {
     min-height: 520px;
   }
 
+  .hero-cube {
+    bottom: -38px;
+    width: min(520px, 112vw);
+  }
+
   .hero-wordmark {
     font-size: 96px;
     bottom: -30px;
@@ -1364,6 +1368,10 @@ onUnmounted(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .hero-visual {
+    transition: none;
+  }
+
+  .hero-cube {
     transition: none;
   }
 
