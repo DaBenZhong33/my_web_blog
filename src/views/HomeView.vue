@@ -119,6 +119,8 @@ const projectImages = [
 const activeSection = ref(sections[0].id)
 const scrollProgress = ref(0)
 const heroVisual = ref(null)
+const bookWrap = ref(null)
+const bookPageStyles = ref([])
 let raf = null
 let sectionObserver = null
 
@@ -130,6 +132,79 @@ const updateScrollProgress = () => {
     : 0
 }
 
+const clamp = (value, min = 0, max = 1) => Math.min(Math.max(value, min), max)
+const smoothStep = (value) => value * value * (3 - 2 * value)
+
+const getBookPageStyle = (index, progress = 1) => {
+  const safeProgress = clamp(progress)
+  const eased = smoothStep(safeProgress)
+  const fold = 1 - eased
+  const delayed = smoothStep(clamp((safeProgress - 0.14) / 0.86))
+  const curl = Math.sin(safeProgress * Math.PI)
+  const paperLag = clamp(eased - delayed, 0, 0.34)
+  const pageAppear = smoothStep(clamp((safeProgress - 0.04) / 0.2))
+  const sideSway = (index % 2 === 0 ? -1 : 1) * curl
+  const settle = smoothStep(clamp((safeProgress - 0.72) / 0.28))
+
+  return {
+    '--page-index': index,
+    '--page-progress': eased.toFixed(3),
+    '--page-fold': fold.toFixed(3),
+    '--page-curl': curl.toFixed(3),
+    '--page-lag': paperLag.toFixed(3),
+    '--page-rotate': `${(72 * fold).toFixed(2)}deg`,
+    '--page-sway': `${(0.5 * sideSway).toFixed(2)}deg`,
+    '--page-y': `${(-26 * fold + 8 * curl).toFixed(1)}px`,
+    '--page-scale': (0.99 + 0.01 * eased).toFixed(3),
+    '--page-opacity': (0.08 + 0.92 * Math.max(eased, pageAppear * 0.68)).toFixed(3),
+    '--page-lift': `${(22 * curl + 6 * paperLag).toFixed(1)}px`,
+    '--page-bend': `${(4.4 * curl - 0.8 * fold).toFixed(2)}deg`,
+    '--page-skew': `${(0.24 * sideSway).toFixed(2)}deg`,
+    '--page-stretch': (1 + 0.006 * paperLag).toFixed(3),
+    '--page-hinge-y': `${(-7 * fold - 4 * paperLag).toFixed(1)}px`,
+    '--page-hinge-rotate': `${(-10 * fold + 4 * paperLag).toFixed(2)}deg`,
+    '--page-hinge-opacity': (0.1 + 0.5 * fold + 0.22 * curl).toFixed(3),
+    '--page-ripple-opacity': (0.06 + 0.24 * curl + 0.18 * paperLag).toFixed(3),
+    '--page-tail-opacity': (0.08 + 0.3 * curl + 0.22 * paperLag).toFixed(3),
+    '--page-tail-y': `${(5 * curl + 12 * paperLag).toFixed(1)}px`,
+    '--page-tail-rotate': `${(5 * curl + 9 * paperLag - 2 * fold).toFixed(2)}deg`,
+    '--page-edge-inset': `${(6 * curl + 8 * paperLag).toFixed(1)}px`,
+    '--page-edge-opacity': (0.08 + 0.46 * curl + 0.2 * paperLag).toFixed(3),
+    '--page-gloss-shift': `${(12 + 58 * safeProgress).toFixed(1)}%`,
+    '--page-contact-opacity': (0.04 + 0.18 * curl + 0.1 * eased).toFixed(3),
+    '--page-contact-y': `${(12 * fold + 5 * curl).toFixed(1)}px`,
+    '--page-contact-scale': (0.82 + 0.12 * eased + 0.12 * curl).toFixed(3),
+    '--page-shadow-alpha': (0.1 + 0.15 * eased + 0.12 * curl).toFixed(3),
+    '--page-settle': settle.toFixed(3),
+    '--page-z': String(40 - index)
+  }
+}
+
+bookPageStyles.value = projects.map((_, index) => getBookPageStyle(index, 1))
+
+const updateBookPages = () => {
+  if (!bookWrap.value) return
+
+  const pages = Array.from(bookWrap.value.querySelectorAll('.book-page-shell'))
+  const enableFlip = window.matchMedia('(min-width: 1081px)').matches && !prefersReducedMotion()
+
+  bookPageStyles.value = pages.map((page, index) => {
+    if (!enableFlip) return getBookPageStyle(index, 1)
+
+    const rect = page.getBoundingClientRect()
+    const viewportHeight = window.innerHeight
+    const startLine = viewportHeight * 0.85
+    const travel = viewportHeight * 0.42
+    const progress = clamp((startLine - rect.top) / travel)
+
+    return getBookPageStyle(index, progress)
+  })
+}
+
+const onResize = () => {
+  updateBookPages()
+}
+
 const onScroll = () => {
   if (raf) return
   raf = requestAnimationFrame(() => {
@@ -139,6 +214,7 @@ const onScroll = () => {
       heroVisual.value.style.setProperty('--hero-shift', `${offset}px`)
     }
     updateScrollProgress()
+    updateBookPages()
   })
 }
 
@@ -184,10 +260,13 @@ onMounted(() => {
   }
 
   updateScrollProgress()
+  updateBookPages()
+  window.addEventListener('resize', onResize, { passive: true })
   window.addEventListener('scroll', onScroll, { passive: true })
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', onResize)
   window.removeEventListener('scroll', onScroll)
   sectionObserver?.disconnect()
   if (raf) cancelAnimationFrame(raf)
@@ -351,15 +430,25 @@ onUnmounted(() => {
       <RouterLink to="/about" class="btn btn-ghost section-button" v-magnetic>更多背景</RouterLink>
     </div>
 
-    <div class="container project-grid">
-      <ProjectPreviewCard
+    <div class="container project-book-list" ref="bookWrap" aria-label="作品翻页列表">
+      <div
         v-for="(p, i) in projects"
         :key="p.id"
-        :project="p"
-        :image="projectImages[i % projectImages.length]"
-        :asset-base="assetBase"
-        v-reveal
-      />
+        class="book-page-shell"
+        :style="bookPageStyles[i]"
+      >
+        <span class="book-page-contact" aria-hidden="true"></span>
+        <ProjectPreviewCard
+          class="book-page-card"
+          :project="p"
+          :image="projectImages[i % projectImages.length]"
+          :asset-base="assetBase"
+        />
+        <span class="book-page-hinge" aria-hidden="true"></span>
+        <span class="book-page-ripple" aria-hidden="true"></span>
+        <span class="book-page-tail" aria-hidden="true"></span>
+        <span class="book-page-edge" aria-hidden="true"></span>
+      </div>
     </div>
   </section>
 
@@ -799,11 +888,189 @@ onUnmounted(() => {
   justify-self: end;
 }
 
-.project-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-top: 70px;
+/* ===== 作品区：纵向柔性翻书 ===== */
+.project-book-list {
+  max-width: 980px;
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+  perspective: 1800px;
+  perspective-origin: 50% 10%;
+  transform-style: preserve-3d;
+}
+
+.book-page-shell {
+  --page-rotate: 0deg;
+  --page-sway: 0deg;
+  --page-y: 0px;
+  --page-scale: 1;
+  --page-opacity: 1;
+  --page-lift: 0px;
+  --page-bend: 0deg;
+  --page-skew: 0deg;
+  --page-stretch: 1;
+  --page-hinge-y: 0px;
+  --page-hinge-rotate: 0deg;
+  --page-hinge-opacity: 0;
+  --page-ripple-opacity: 0;
+  --page-tail-opacity: 0;
+  --page-tail-y: 0px;
+  --page-tail-rotate: 0deg;
+  --page-edge-inset: 0px;
+  --page-edge-opacity: 0;
+  --page-gloss-shift: 50%;
+  --page-contact-opacity: 0;
+  --page-contact-y: 0px;
+  --page-contact-scale: 1;
+  --page-shadow-alpha: 0.28;
+  position: relative;
+  z-index: var(--page-z);
+  transform-origin: top center;
+  transform:
+    translate3d(0, var(--page-y), 0)
+    rotateX(var(--page-rotate))
+    rotateZ(var(--page-sway))
+    scale(var(--page-scale));
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  opacity: var(--page-opacity);
+  filter: drop-shadow(0 28px 54px rgba(0, 0, 0, var(--page-shadow-alpha)));
+  will-change: transform, opacity, filter;
+}
+
+.book-page-contact,
+.book-page-hinge,
+.book-page-ripple,
+.book-page-tail,
+.book-page-edge {
+  position: absolute;
+  border-radius: var(--radius-card);
+  pointer-events: none;
+}
+
+.book-page-contact {
+  left: 10%;
+  right: 10%;
+  bottom: -22px;
+  z-index: 0;
+  height: 26%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.64), transparent 68%);
+  filter: blur(14px);
+  opacity: var(--page-contact-opacity);
+  transform-origin: center top;
+  transform:
+    translate3d(0, var(--page-contact-y), -84px)
+    rotateX(68deg)
+    scaleX(var(--page-contact-scale));
+}
+
+.book-page-hinge {
+  inset: -10px 0 auto;
+  z-index: 5;
+  height: 96px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.28),
+      rgba(255, 255, 255, 0.1) 28%,
+      transparent 70%
+    ),
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(215, 255, 0, 0.14) 46%,
+      rgba(255, 255, 255, 0.2) 52%,
+      transparent 70%
+    );
+  opacity: var(--page-hinge-opacity);
+  transform-origin: top center;
+  transform:
+    translate3d(0, var(--page-hinge-y), 36px)
+    rotateX(var(--page-hinge-rotate));
+}
+
+.book-page-ripple {
+  inset: 0;
+  z-index: 6;
+  background:
+    radial-gradient(
+      ellipse at 50% var(--page-gloss-shift),
+      rgba(255, 255, 255, 0.28),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.08),
+      transparent 24%,
+      rgba(0, 0, 0, 0.14) 68%,
+      rgba(255, 255, 255, 0.08) 86%,
+      transparent 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05),
+      transparent 18% 84%,
+      rgba(0, 0, 0, 0.18)
+    );
+  mix-blend-mode: soft-light;
+  opacity: var(--page-ripple-opacity);
+  transform:
+    translate3d(0, var(--page-tail-y), 38px)
+    scaleY(var(--page-stretch));
+}
+
+.book-page-tail {
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  z-index: 7;
+  height: 22%;
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      rgba(0, 0, 0, 0.22) 54%,
+      rgba(255, 255, 255, 0.12) 84%,
+      rgba(0, 0, 0, 0.2)
+    );
+  mix-blend-mode: overlay;
+  opacity: var(--page-tail-opacity);
+  transform-origin: bottom center;
+  transform:
+    translate3d(0, var(--page-tail-y), 42px)
+    rotateX(var(--page-tail-rotate));
+}
+
+.book-page-edge {
+  left: 6%;
+  right: 6%;
+  bottom: calc(-2px + var(--page-edge-inset));
+  z-index: 8;
+  height: 5px;
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 50% 0, rgba(255, 255, 255, 0.28), transparent 72%),
+    linear-gradient(90deg, transparent, rgba(215, 255, 0, 0.16), transparent);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.32);
+  opacity: var(--page-edge-opacity);
+  transform-origin: bottom center;
+  transform:
+    translate3d(0, var(--page-tail-y), 48px)
+    rotateX(var(--page-tail-rotate));
+}
+
+.book-page-card {
+  position: relative;
+  z-index: 2;
+  transform-origin: top center;
+  transform:
+    translateZ(var(--page-lift))
+    rotateX(var(--page-bend))
+    skewX(var(--page-skew))
+    scaleY(var(--page-stretch));
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+  will-change: transform;
 }
 
 .process-section {
@@ -984,9 +1251,29 @@ onUnmounted(() => {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .project-grid,
-  .metric-grid {
+  .project-book-list {
+    display: grid;
     grid-template-columns: repeat(2, 1fr);
+    max-width: 1360px;
+    gap: 18px;
+    margin-top: 42px;
+    perspective: none;
+    transform-style: flat;
+  }
+
+  .book-page-shell,
+  .book-page-card {
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none;
+  }
+
+  .book-page-contact,
+  .book-page-hinge,
+  .book-page-ripple,
+  .book-page-tail,
+  .book-page-edge {
+    display: none;
   }
 
   .final-cta {
@@ -1063,9 +1350,9 @@ onUnmounted(() => {
     grid-template-columns: 1fr;
   }
 
-  .project-grid,
-  .metric-grid {
+  .project-book-list {
     grid-template-columns: 1fr;
+    margin-top: 32px;
   }
 
   .process-row {
@@ -1080,5 +1367,19 @@ onUnmounted(() => {
     transition: none;
   }
 
+  .book-page-shell,
+  .book-page-card {
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none;
+  }
+
+  .book-page-contact,
+  .book-page-hinge,
+  .book-page-ripple,
+  .book-page-tail,
+  .book-page-edge {
+    display: none;
+  }
 }
 </style>

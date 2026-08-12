@@ -62,7 +62,9 @@ for (const pattern of [
   /class="marked">CODE SYSTEMS</,
   /metric-ticker/,
   /splitTickerValue\(metric\.value\)/,
-  /class="container project-grid"/,
+  /class="container project-book-list"/,
+  /class="book-page-shell"/,
+  /bookPageStyles/,
   /scroll-margin-top:\s*88px/,
   /text-decoration-thickness:\s*3px/,
   /opacity:\s*0\.76/
@@ -80,6 +82,7 @@ for (const pattern of [
   /work-hscroll/,
   /work-sticky/,
   /work-track/,
+  /project-grid/,
   /signalTrack/,
   /tickerItems/,
   /const avatars = \[/,
