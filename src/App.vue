@@ -10,7 +10,9 @@ import BackToTop from './components/BackToTop.vue'
     <header class="nav">
       <div class="container nav-inner">
         <RouterLink to="/" class="logo">
-          <span class="logo-mark">钟</span>
+          <span class="logo-mark" aria-hidden="true">
+            <img src="/brand/dbz-logo.png" alt="" />
+          </span>
           <span class="logo-text">大笨钟<em> / DEV</em></span>
         </RouterLink>
         <nav class="nav-links">
@@ -32,7 +34,9 @@ import BackToTop from './components/BackToTop.vue'
     <footer class="footer">
       <div class="container footer-inner">
         <div class="footer-brand">
-          <span class="logo-mark">钟</span>
+          <span class="logo-mark" aria-hidden="true">
+            <img src="/brand/dbz-logo.png" alt="" />
+          </span>
           <div>
             <p class="footer-name">大笨钟 / DEV</p>
             <p class="footer-desc">独立开发者 · 做自己的小产品</p>
@@ -92,17 +96,23 @@ main {
 }
 
 .logo-mark {
-  width: 38px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(215, 255, 0, 0.28);
   border-radius: 0;
-  background: var(--accent);
-  color: #050505;
+  background: #050505;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  font-weight: 900;
   flex: none;
+  overflow: hidden;
+}
+
+.logo-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.34);
 }
 
 .logo-text em {
@@ -142,6 +152,11 @@ main {
 @media (max-width: 560px) {
   .nav-inner {
     height: 64px;
+  }
+
+  .logo-mark {
+    width: 40px;
+    height: 40px;
   }
 
   .logo-text em {
