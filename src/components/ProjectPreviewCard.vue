@@ -60,8 +60,10 @@ const closePreview = (event) => {
     <img
       v-if="!hasImageError"
       class="project-bg"
-      :src="assetBase + image"
+      :src="project.coverImage || assetBase + image"
       :alt="project.name"
+      loading="lazy"
+      decoding="async"
       @error="hasImageError = true"
     />
     <div
@@ -80,7 +82,17 @@ const closePreview = (event) => {
       <span>2026</span>
     </div>
 
-    <div class="project-phone" v-tilt="6">
+    <div v-if="project.coverImage" class="project-shot-frame" v-tilt="6">
+      <img
+        class="project-shot"
+        :src="project.coverImage"
+        :alt="`${project.name} 界面截图`"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+
+    <div v-else class="project-phone" v-tilt="6">
       <PhoneMockup :gradient="project.gradient" :accent="project.accent" :label="project.screens[0]" />
     </div>
 
@@ -264,6 +276,32 @@ const closePreview = (event) => {
   top: 47%;
   z-index: 2;
   transform: translate(-50%, -50%) scale(0.72);
+}
+
+.project-shot-frame {
+  position: absolute;
+  left: 50%;
+  top: 47%;
+  z-index: 2;
+  width: min(238px, 48%);
+  aspect-ratio: 9 / 19.4;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 32px;
+  background: #050505;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.48);
+  transform: translate(-50%, -50%);
+}
+
+.project-shot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.project-shot-frame :deep(.tilt-body) {
+  height: 100%;
 }
 
 .project-phone :deep(.tilt-body) {
@@ -496,6 +534,11 @@ const closePreview = (event) => {
   .project-phone {
     top: 40%;
     transform: translate(-50%, -50%) scale(0.62);
+  }
+
+  .project-shot-frame {
+    top: 40%;
+    width: min(220px, 58%);
   }
 
   .preview-panel {

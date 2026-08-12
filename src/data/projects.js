@@ -23,6 +23,16 @@ export const projects = [
     accent: '#c47a36',
     gradient: ['#f0d8bd', '#6f3d1f'],
     screens: ['月历', '日程', '待办'],
+    coverImage: '/project-screens/daily-planner.png',
+    screenshots: [
+      {
+        label: '月历与日程',
+        src: '/project-screens/daily-planner.png',
+        alt: '每日计划 App 的月历与当日日程截图',
+        width: 853,
+        height: 1844
+      }
+    ],
     links: { appstore: '#', github: '#', web: '' }
   },
   {
@@ -48,6 +58,16 @@ export const projects = [
     accent: '#c63a10',
     gradient: ['#fff5ec', '#c63a10'],
     screens: ['菜单', '分类筛选', '已选确认'],
+    coverImage: '/project-screens/today-menu.png',
+    screenshots: [
+      {
+        label: '菜单选择',
+        src: '/project-screens/today-menu.png',
+        alt: '今日菜单 App 的菜品双列选择截图',
+        width: 853,
+        height: 1844
+      }
+    ],
     links: { appstore: '#', googleplay: '#', github: '#' }
   },
   {
@@ -73,6 +93,16 @@ export const projects = [
     accent: '#2f7df6',
     gradient: ['#2f7df6', '#0f4ec8'],
     screens: ['首页', '群组账本', '结算记录'],
+    coverImage: '/project-screens/group-ledger.png',
+    screenshots: [
+      {
+        label: '群组首页',
+        src: '/project-screens/group-ledger.png',
+        alt: '群组记账 App 的群组账本首页截图',
+        width: 333,
+        height: 1600
+      }
+    ],
     links: { googleplay: '#', github: '#' }
   }
 ]

@@ -10,6 +10,15 @@ const project = computed(() => getProject(route.params.id))
 const others = computed(() => projects.filter((p) => p.id !== route.params.id))
 
 const activeScreen = ref(0)
+const screenshots = computed(() => project.value?.screenshots ?? [])
+const screenOptions = computed(() => (
+  screenshots.value.length
+    ? screenshots.value
+    : (project.value?.screens ?? []).map((label) => ({ label }))
+))
+const activeScreenshot = computed(() => (
+  screenshots.value[activeScreen.value] ?? screenshots.value[0] ?? null
+))
 </script>
 
 <template>
@@ -45,26 +54,38 @@ const activeScreen = ref(0)
     <section class="section container">
       <p class="eyebrow" v-reveal>Screenshots · 界面</p>
       <h2 class="section-title" v-reveal>长这样。</h2>
-      <p class="section-sub" v-reveal>围绕核心使用场景整理界面结构，展示这个产品最重要的交互路径。</p>
+      <p class="section-sub" v-reveal>真实界面截图，展示这个产品最重要的使用场景和交互路径。</p>
 
       <div class="screens" v-reveal>
-        <div class="screens-stage" v-tilt="10">
+        <div class="screens-stage" :class="{ 'has-capture': activeScreenshot }" v-tilt="10">
+          <figure v-if="activeScreenshot" class="screen-capture">
+            <img
+              :src="activeScreenshot.src"
+              :alt="activeScreenshot.alt"
+              :width="activeScreenshot.width"
+              :height="activeScreenshot.height"
+              loading="lazy"
+              decoding="async"
+            />
+            <figcaption>{{ activeScreenshot.label }}</figcaption>
+          </figure>
           <PhoneMockup
+            v-else
             :gradient="project.gradient"
             :accent="project.accent"
             :label="project.screens[activeScreen]"
           />
         </div>
-        <div class="screens-tabs">
+        <div v-if="screenOptions.length > 1" class="screens-tabs">
           <button
-            v-for="(s, i) in project.screens"
-            :key="s"
+            v-for="(s, i) in screenOptions"
+            :key="s.label"
             class="screen-tab"
             :class="{ active: i === activeScreen }"
             :style="i === activeScreen ? { borderColor: project.accent, color: project.accent } : {}"
             @click="activeScreen = i"
           >
-            {{ s }}
+            {{ s.label }}
           </button>
         </div>
       </div>
@@ -221,6 +242,39 @@ const activeScreen = ref(0)
 
 .screens-stage {
   padding: 32px 0;
+}
+
+.screens-stage.has-capture {
+  padding: 20px 0;
+}
+
+.screen-capture {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: min(100%, 420px);
+  max-height: min(78vh, 860px);
+  padding: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 38px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 34px 80px rgba(0, 0, 0, 0.42);
+}
+
+.screen-capture img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: calc(min(78vh, 860px) - 56px);
+  object-fit: contain;
+  border-radius: 30px;
+}
+
+.screen-capture figcaption {
+  margin-top: 10px;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .screens-tabs {
