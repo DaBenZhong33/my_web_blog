@@ -89,7 +89,7 @@ const formatIndex = (index) => String(index + 1).padStart(2, '0')
   gap: 4px 8px;
   align-items: baseline;
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 0;
   border: 0;
   border-left: 2px solid transparent;
