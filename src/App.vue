@@ -1,9 +1,12 @@
 <script setup>
 import { RouterView, RouterLink } from 'vue-router'
+import ScrollProgress from './components/ScrollProgress.vue'
+import BackToTop from './components/BackToTop.vue'
 </script>
 
 <template>
   <div class="site">
+    <ScrollProgress />
     <header class="nav">
       <div class="container nav-inner">
         <RouterLink to="/" class="logo">
@@ -45,6 +48,8 @@ import { RouterView, RouterLink } from 'vue-router'
         © 2026 大笨钟 · Vue 3 + Vite
       </div>
     </footer>
+
+    <BackToTop />
   </div>
 </template>
 

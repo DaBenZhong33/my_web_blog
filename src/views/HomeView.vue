@@ -154,8 +154,21 @@ const avatars = ['avatar-1.jpg', 'avatar-2.jpg', 'avatar-3.jpg']
 const activeSection = ref(sections[0].id)
 const scrollProgress = ref(0)
 const heroVisual = ref(null)
+const signalTrack = ref(null)
+const workWrap = ref(null)
+const workTrack = ref(null)
 let raf = null
 let sectionObserver = null
+
+// 跑马灯速度联动：滚动加速、上滚反转、停止后回归常速
+let signalAnimation = null
+let signalVelocity = 0
+let lastScrollY = 0
+let signalRaf = null
+
+// 作品区横向滚动（仅桌面端启用）
+const desktopQuery = window.matchMedia('(min-width: 1081px)')
+let workShift = 0
 
 const updateScrollProgress = () => {
   const doc = document.documentElement
@@ -163,6 +176,48 @@ const updateScrollProgress = () => {
   scrollProgress.value = scrollable > 0
     ? Math.min(Math.max(window.scrollY / scrollable, 0), 1)
     : 0
+}
+
+const measureWork = () => {
+  if (!workWrap.value || !workTrack.value) return
+
+  if (!desktopQuery.matches) {
+    workWrap.value.style.height = ''
+    workTrack.value.style.transform = ''
+    workShift = 0
+    return
+  }
+
+  const trackWidth = workTrack.value.scrollWidth
+  const viewWidth = workTrack.value.parentElement.clientWidth
+  workShift = Math.max(trackWidth - viewWidth, 0)
+  workWrap.value.style.height = `${window.innerHeight + workShift}px`
+}
+
+const updateWorkScroll = () => {
+  if (!workWrap.value || !workTrack.value || !desktopQuery.matches) return
+
+  const rect = workWrap.value.getBoundingClientRect()
+  const total = rect.height - window.innerHeight
+  const ratio = total > 0 ? Math.min(Math.max(-rect.top / total, 0), 1) : 0
+  workTrack.value.style.transform = `translate3d(${(-ratio * workShift).toFixed(1)}px, 0, 0)`
+}
+
+const tickSignal = () => {
+  signalRaf = requestAnimationFrame(tickSignal)
+  if (!signalAnimation) return
+
+  // 速度逐帧衰减，播放倍率平滑插值到目标值
+  signalVelocity *= 0.92
+  const boost = Math.min(Math.max(signalVelocity * 0.06, -3), 4)
+  const target = 1 + boost
+  const current = signalAnimation.playbackRate
+  signalAnimation.playbackRate = current + (target - current) * 0.14
+}
+
+const onResize = () => {
+  measureWork()
+  updateWorkScroll()
 }
 
 const onScroll = () => {
@@ -173,7 +228,10 @@ const onScroll = () => {
       const offset = Math.min(window.scrollY * -0.08, 0)
       heroVisual.value.style.setProperty('--hero-shift', `${offset}px`)
     }
+    signalVelocity = window.scrollY - lastScrollY
+    lastScrollY = window.scrollY
     updateScrollProgress()
+    updateWorkScroll()
   })
 }
 
@@ -219,13 +277,25 @@ onMounted(() => {
   }
 
   updateScrollProgress()
+  lastScrollY = window.scrollY
+
+  if (signalTrack.value && !prefersReducedMotion()) {
+    signalAnimation = signalTrack.value.getAnimations()[0] ?? null
+    if (signalAnimation) signalRaf = requestAnimationFrame(tickSignal)
+  }
+
+  measureWork()
+  updateWorkScroll()
+  window.addEventListener('resize', onResize, { passive: true })
   window.addEventListener('scroll', onScroll, { passive: true })
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('resize', onResize)
   sectionObserver?.disconnect()
   if (raf) cancelAnimationFrame(raf)
+  if (signalRaf) cancelAnimationFrame(signalRaf)
 })
 </script>
 
@@ -285,7 +355,7 @@ onUnmounted(() => {
   </section>
 
   <div class="signal-strip" aria-hidden="true">
-    <div class="signal-track">
+    <div class="signal-track" ref="signalTrack">
       <span v-for="(item, i) in [...tickerItems, ...tickerItems]" :key="i">
         <i></i>{{ item }}
       </span>
@@ -406,15 +476,20 @@ onUnmounted(() => {
       <RouterLink to="/about" class="btn btn-ghost section-button" v-magnetic>更多背景</RouterLink>
     </div>
 
-    <div class="container project-grid">
-      <ProjectPreviewCard
-        v-for="(p, i) in projects"
-        :key="p.id"
-        :project="p"
-        :image="projectImages[i % projectImages.length]"
-        :asset-base="assetBase"
-        v-reveal
-      />
+    <div class="work-hscroll" ref="workWrap">
+      <div class="work-sticky">
+        <div class="work-track" ref="workTrack">
+          <ProjectPreviewCard
+            v-for="(p, i) in projects"
+            :key="p.id"
+            class="work-card"
+            :project="p"
+            :image="projectImages[i % projectImages.length]"
+            :asset-base="assetBase"
+            v-reveal
+          />
+        </div>
+      </div>
     </div>
   </section>
 
@@ -973,11 +1048,30 @@ onUnmounted(() => {
   justify-self: end;
 }
 
-.project-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+/* ===== 作品区：纵向滚动驱动横向平移（桌面端） ===== */
+.work-hscroll {
   margin-top: 70px;
+}
+
+.work-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.work-track {
+  display: flex;
+  gap: 18px;
+  padding: 0 max(40px, calc((100vw - 1360px) / 2));
+  will-change: transform;
+}
+
+.work-card {
+  flex: none;
+  width: min(560px, 42vw);
 }
 
 .process-section {
@@ -1174,9 +1268,30 @@ onUnmounted(() => {
     gap: 38px;
   }
 
-  .project-grid,
   .metric-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 作品区回退为纵向网格 */
+  .work-hscroll {
+    height: auto !important;
+  }
+
+  .work-sticky {
+    position: static;
+    height: auto;
+    overflow: visible;
+  }
+
+  .work-track {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0 40px;
+    transform: none !important;
+  }
+
+  .work-card {
+    width: auto;
   }
 
   .final-cta {
@@ -1250,9 +1365,13 @@ onUnmounted(() => {
     font-size: 18px;
   }
 
-  .project-grid,
   .metric-grid {
     grid-template-columns: 1fr;
+  }
+
+  .work-track {
+    grid-template-columns: 1fr;
+    padding: 0 16px;
   }
 
   .process-row {
