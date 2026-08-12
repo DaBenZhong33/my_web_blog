@@ -9,6 +9,7 @@ const files = {
   preview: 'src/components/ProjectPreviewCard.vue',
   style: 'src/style.css',
   heroCube: 'src/components/HeroMetalCube.vue',
+  canvasText: 'src/components/CanvasText.vue',
   packageJson: 'package.json'
 }
 
@@ -36,11 +37,12 @@ const rail = readUtf8(files.rail)
 const preview = readUtf8(files.preview)
 const style = readUtf8(files.style)
 const heroCube = readUtf8(files.heroCube)
+const canvasText = readUtf8(files.canvasText)
 const packageJson = readUtf8(files.packageJson)
 
 const garbledPattern = /[\uFFFD\u951F\u00C3\u00C2]/
 
-for (const [label, content] of Object.entries({ home, rail, preview, style, heroCube })) {
+for (const [label, content] of Object.entries({ home, rail, preview, style, heroCube, canvasText })) {
   if (garbledPattern.test(content)) failures.push(`${label} contains garbled text marker`)
 }
 
@@ -65,7 +67,13 @@ for (const pattern of [
 }
 
 for (const pattern of [
-  /class="marked">CODE SYSTEMS</,
+  /import CanvasText from '\.\.\/components\/CanvasText\.vue'/,
+  /const canvasAccentColors = \[/,
+  /const canvasInverseColors = \[/,
+  /<CanvasText[\s\S]*text="CODE SYSTEMS"/,
+  /<CanvasText[\s\S]*text="SHIP"/,
+  /class="marked canvas-title-accent"/,
+  /class="canvas-title-inverse"/,
   /metric-ticker/,
   /splitTickerValue\(metric\.value\)/,
   /class="container project-book-list"/,
@@ -98,6 +106,34 @@ for (const pattern of [
   /class="stars"/
 ]) {
   rejectPattern(files.home, home, pattern)
+}
+
+for (const pattern of [
+  /defineProps/,
+  /text: \{ type: String, required: true \}/,
+  /colors: \{ type: Array,/,
+  /lineGap: \{ type: Number, default: 4 \}/,
+  /animationDuration: \{ type: Number, default: 20 \}/,
+  /backgroundClassName: \{ type: String, default: '' \}/,
+  /computed/,
+  /--canvas-color-1/,
+  /aria-label="text"/,
+  /aria-hidden="true"/,
+  /\.canvas-text/,
+  /\.canvas-text__line-layer/,
+  /@keyframes canvasTextSweep/,
+  /prefers-reduced-motion: reduce/
+]) {
+  expectPattern(files.canvasText, canvasText, pattern)
+}
+
+for (const pattern of [
+  /0,\s*153,\s*255/,
+  /bg-blue-600/,
+  /bg-blue-700/
+]) {
+  rejectPattern(files.home, home, pattern)
+  rejectPattern(files.canvasText, canvasText, pattern)
 }
 
 for (const pattern of [
