@@ -18,6 +18,7 @@ let camera
 let renderer
 let cubeGroup
 let brushTexture
+let reflectionTexture
 let core
 let resizeObserver
 let animationFrame = 0
@@ -121,26 +122,52 @@ const createBrushTexture = () => {
   canvas.height = TEXTURE_SIZE
 
   const context = canvas.getContext('2d')
-  context.fillStyle = '#8e948e'
+  context.fillStyle = '#8b938d'
   context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
 
   for (let y = 0; y < TEXTURE_SIZE; y += 1) {
-    const wave = Math.sin(y * 0.065) * 9 + Math.sin(y * 0.21) * 5
+    const wave = Math.sin(y * 0.085) * 11 + Math.sin(y * 0.27) * 6
     const shade = 142 + Math.round(wave)
-    context.fillStyle = `rgba(${shade}, ${shade}, ${shade}, ${y % 5 === 0 ? 0.2 : 0.1})`
+    context.fillStyle = `rgba(${shade}, ${shade}, ${shade}, ${y % 5 === 0 ? 0.24 : 0.13})`
     context.fillRect(0, y, TEXTURE_SIZE, 1)
   }
 
   for (let y = 0; y < TEXTURE_SIZE; y += 7) {
     const offset = Math.sin(y * 0.37) * 18
-    context.fillStyle = 'rgba(255, 255, 255, 0.055)'
+    context.fillStyle = 'rgba(255, 255, 255, 0.09)'
     context.fillRect(Math.max(0, offset), y, TEXTURE_SIZE - Math.abs(offset), 1)
   }
 
   context.globalCompositeOperation = 'screen'
+  const diagonalGlint = context.createLinearGradient(0, TEXTURE_SIZE, TEXTURE_SIZE, 0)
+  diagonalGlint.addColorStop(0, 'rgba(255,255,255,0.02)')
+  diagonalGlint.addColorStop(0.34, 'rgba(255,255,255,0.05)')
+  diagonalGlint.addColorStop(0.52, 'rgba(255,255,255,0.2)')
+  diagonalGlint.addColorStop(0.68, 'rgba(255,255,255,0.07)')
+  diagonalGlint.addColorStop(1, 'rgba(255,255,255,0.03)')
+  context.fillStyle = diagonalGlint
+  context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
+
+  const edgeSheen = context.createLinearGradient(0, 0, TEXTURE_SIZE, 0)
+  edgeSheen.addColorStop(0, 'rgba(255,255,255,0.14)')
+  edgeSheen.addColorStop(0.16, 'rgba(255,255,255,0.03)')
+  edgeSheen.addColorStop(0.78, 'rgba(255,255,255,0.02)')
+  edgeSheen.addColorStop(1, 'rgba(255,255,255,0.18)')
+  context.fillStyle = edgeSheen
+  context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
+
+  context.globalCompositeOperation = 'multiply'
+  const edgeDepth = context.createLinearGradient(0, 0, 0, TEXTURE_SIZE)
+  edgeDepth.addColorStop(0, 'rgba(0,0,0,0.1)')
+  edgeDepth.addColorStop(0.48, 'rgba(255,255,255,1)')
+  edgeDepth.addColorStop(1, 'rgba(0,0,0,0.18)')
+  context.fillStyle = edgeDepth
+  context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
+
+  context.globalCompositeOperation = 'screen'
   const highlight = context.createLinearGradient(0, 0, TEXTURE_SIZE, 0)
-  highlight.addColorStop(0, 'rgba(255,255,255,0.04)')
-  highlight.addColorStop(0.5, 'rgba(255,255,255,0.16)')
+  highlight.addColorStop(0, 'rgba(255,255,255,0.03)')
+  highlight.addColorStop(0.5, 'rgba(255,255,255,0.12)')
   highlight.addColorStop(1, 'rgba(255,255,255,0.04)')
   context.fillStyle = highlight
   context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
@@ -150,6 +177,39 @@ const createBrushTexture = () => {
   texture.wrapS = THREE.RepeatWrapping
   texture.wrapT = THREE.RepeatWrapping
   texture.repeat.set(1, 1)
+
+  return texture
+}
+
+const createReflectionTexture = () => {
+  const canvas = document.createElement('canvas')
+  canvas.width = TEXTURE_SIZE * 2
+  canvas.height = TEXTURE_SIZE
+
+  const context = canvas.getContext('2d')
+  const sky = context.createLinearGradient(0, 0, canvas.width, 0)
+  sky.addColorStop(0, '#050606')
+  sky.addColorStop(0.16, '#acb5ac')
+  sky.addColorStop(0.25, '#5d655f')
+  sky.addColorStop(0.42, '#111413')
+  sky.addColorStop(0.56, '#c3cbc0')
+  sky.addColorStop(0.68, '#7a837c')
+  sky.addColorStop(0.82, '#090b0b')
+  sky.addColorStop(1, '#cbd0c6')
+  context.fillStyle = sky
+  context.fillRect(0, 0, canvas.width, canvas.height)
+
+  const horizon = context.createLinearGradient(0, 0, 0, canvas.height)
+  horizon.addColorStop(0, 'rgba(255,255,255,0.18)')
+  horizon.addColorStop(0.48, 'rgba(255,255,255,0.02)')
+  horizon.addColorStop(0.54, 'rgba(0,0,0,0.36)')
+  horizon.addColorStop(1, 'rgba(0,0,0,0.74)')
+  context.fillStyle = horizon
+  context.fillRect(0, 0, canvas.width, canvas.height)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.mapping = THREE.EquirectangularReflectionMapping
+  texture.colorSpace = THREE.SRGBColorSpace
 
   return texture
 }
@@ -250,12 +310,20 @@ const resizeRenderer = () => {
 
 const createFace = (definition) => {
   const plane = new THREE.PlaneGeometry(FACE_SIZE, FACE_SIZE, 18, 18)
-  const material = new THREE.MeshStandardMaterial({
-    color: 0xd8dad3,
+  const material = new THREE.MeshPhysicalMaterial({
+    color: 0xb4bbb1,
     map: brushTexture,
-    metalness: 0.9,
-    roughness: 0.36,
-    envMapIntensity: 0.7,
+    bumpMap: brushTexture,
+    bumpScale: 0.035,
+    envMap: reflectionTexture,
+    anisotropy: 0.82,
+    anisotropyRotation: Math.PI / 2,
+    metalness: 0.86,
+    roughness: 0.2,
+    clearcoat: 0.28,
+    clearcoatRoughness: 0.16,
+    reflectivity: 0.82,
+    envMapIntensity: 1.22,
     side: THREE.DoubleSide
   })
   const mesh = new THREE.Mesh(plane, material)
@@ -263,9 +331,9 @@ const createFace = (definition) => {
   const edge = new THREE.LineSegments(
     new THREE.EdgesGeometry(plane),
     new THREE.LineBasicMaterial({
-      color: 0xf3f5ee,
+      color: 0xffffff,
       transparent: true,
-      opacity: 0.34
+      opacity: 0.48
     })
   )
 
@@ -302,21 +370,23 @@ const createScene = () => {
   renderer.domElement.style.height = '100%'
   canvasHost.value.appendChild(renderer.domElement)
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.72))
+  scene.add(new THREE.AmbientLight(0xffffff, 0.58))
 
-  const keyLight = new THREE.DirectionalLight(0xffffff, 2.1)
+  const keyLight = new THREE.DirectionalLight(0xffffff, 2.15)
   keyLight.position.set(4, 5, 6)
   scene.add(keyLight)
 
-  const rimLight = new THREE.DirectionalLight(ACCENT, 0.55)
+  const rimLight = new THREE.DirectionalLight(ACCENT, 0.78)
   rimLight.position.set(-3, 1.8, -4)
   scene.add(rimLight)
 
-  const fillLight = new THREE.PointLight(0xffffff, 0.7, 12)
-  fillLight.position.set(0, -2, 4)
+  const fillLight = new THREE.PointLight(0xffffff, 0.86, 14)
+  fillLight.position.set(0.6, -1.6, 4.5)
   scene.add(fillLight)
 
   brushTexture = createBrushTexture()
+  reflectionTexture = createReflectionTexture()
+  scene.environment = reflectionTexture
   cubeGroup = new THREE.Group()
   cubeGroup.name = 'brushed-metal-cube'
   cubeGroup.rotation.set(-0.26, 0.52, 0)
@@ -394,6 +464,7 @@ const disposeThreeScene = () => {
   }
 
   brushTexture?.dispose()
+  reflectionTexture?.dispose()
   renderer?.dispose()
   renderer?.forceContextLoss?.()
   renderer?.domElement?.remove()
@@ -403,6 +474,7 @@ const disposeThreeScene = () => {
   renderer = null
   cubeGroup = null
   brushTexture = null
+  reflectionTexture = null
   core = null
 }
 

@@ -47,122 +47,139 @@ const closePreview = (event) => {
 </script>
 
 <template>
-  <article
-    class="project-preview-card corner-frame"
-    :class="{ 'preview-open': isPreviewOpen }"
-    :style="[{ '--tile-accent': project.accent }, spotlightStyle]"
+  <div
+    class="project-preview-tilt"
+    v-tilt="{ max: 18, scale: 1.025, disabledBelow: 1081 }"
     @mouseenter="openPreview"
     @mousemove="updateSpotlight"
     @mouseleave="closePreview"
     @focusin="openPreview"
     @focusout="closePreview"
   >
-    <img
-      v-if="!hasImageError"
-      class="project-bg"
-      :src="project.coverImage || assetBase + image"
-      :alt="project.name"
-      loading="lazy"
-      decoding="async"
-      @error="hasImageError = true"
-    />
-    <div
-      v-else
-      class="project-fallback"
-      :style="{ background: `linear-gradient(160deg, ${project.gradient[0]}, ${project.gradient[1]})` }"
-      aria-hidden="true"
-    ></div>
-    <div class="project-overlay" aria-hidden="true"></div>
-    <span class="project-spotlight" aria-hidden="true"></span>
-    <span class="project-comet" aria-hidden="true"></span>
-
-    <div class="project-meta">
-      <span>{{ project.platform }}</span>
-      <span>{{ project.tech[0] }}</span>
-      <span>2026</span>
-    </div>
-
-    <div v-if="project.coverImage" class="project-shot-frame" v-tilt="6">
-      <img
-        class="project-shot"
-        :src="project.coverImage"
-        :alt="`${project.name} 界面截图`"
-        loading="lazy"
-        decoding="async"
-      />
-    </div>
-
-    <div v-else class="project-phone" v-tilt="6">
-      <PhoneMockup :gradient="project.gradient" :accent="project.accent" :label="project.screens[0]" />
-    </div>
-
-    <div
-      :id="`preview-${project.id}`"
-      class="preview-panel"
-      :aria-hidden="!isPreviewOpen"
+    <article
+      class="project-preview-card corner-frame"
+      :class="{ 'preview-open': isPreviewOpen }"
+      :style="[{ '--tile-accent': project.accent }, spotlightStyle]"
     >
-      <p class="preview-kicker">QUICK PREVIEW</p>
-      <p class="preview-desc">{{ project.description }}</p>
+      <div class="project-card-clip" aria-hidden="true">
+        <img
+          v-if="!hasImageError"
+          class="project-bg"
+          :src="project.coverImage || assetBase + image"
+          :alt="project.name"
+          loading="lazy"
+          decoding="async"
+          @error="hasImageError = true"
+        />
+        <div
+          v-else
+          class="project-fallback"
+          :style="{ background: `linear-gradient(160deg, ${project.gradient[0]}, ${project.gradient[1]})` }"
+        ></div>
+        <div class="project-overlay"></div>
+      </div>
+      <span class="project-spotlight" aria-hidden="true"></span>
+      <span class="project-comet" aria-hidden="true"></span>
 
-      <div class="preview-block">
-        <span>CORE FEATURES</span>
-        <ul>
-          <li v-for="feature in project.features.slice(0, 3)" :key="feature">
-            {{ feature }}
-          </li>
-        </ul>
+      <div class="project-meta">
+        <span>{{ project.platform }}</span>
+        <span>{{ project.tech[0] }}</span>
+        <span>2026</span>
       </div>
 
-      <div class="preview-tags" aria-label="技术栈">
-        <span v-for="tech in project.tech" :key="tech">{{ tech }}</span>
+      <div v-if="project.coverImage" class="project-shot-frame" v-tilt="{ max: 8, scale: 1.02 }">
+        <img
+          class="project-shot"
+          :src="project.coverImage"
+          :alt="`${project.name} 界面截图`"
+          loading="lazy"
+          decoding="async"
+        />
       </div>
 
-      <div class="preview-screens" aria-label="截图标签">
-        <span v-for="screen in project.screens" :key="screen">{{ screen }}</span>
+      <div v-else class="project-phone" v-tilt="{ max: 8, scale: 1.02 }">
+        <PhoneMockup :gradient="project.gradient" :accent="project.accent" :label="project.screens[0]" />
       </div>
 
-      <RouterLink class="preview-link" :to="`/project/${project.id}`">查看详情</RouterLink>
-    </div>
+      <div
+        :id="`preview-${project.id}`"
+        class="preview-panel"
+        :aria-hidden="!isPreviewOpen"
+      >
+        <p class="preview-kicker">QUICK PREVIEW</p>
+        <p class="preview-desc">{{ project.description }}</p>
 
-    <div class="project-footer">
-      <AppIcon
-        :name="project.name"
-        :accent="project.accent"
-        :gradient="project.gradient"
-        :image="project.iconImage"
-        :size="50"
-      />
-      <div class="project-copy">
-        <h3>{{ project.name }} <span>{{ project.nameEn }}</span></h3>
-        <p>{{ project.slogan }}</p>
+        <div class="preview-block">
+          <span>CORE FEATURES</span>
+          <ul>
+            <li v-for="feature in project.features.slice(0, 3)" :key="feature">
+              {{ feature }}
+            </li>
+          </ul>
+        </div>
+
+        <div class="preview-tags" aria-label="技术栈">
+          <span v-for="tech in project.tech" :key="tech">{{ tech }}</span>
+        </div>
+
+        <div class="preview-screens" aria-label="截图标签">
+          <span v-for="screen in project.screens" :key="screen">{{ screen }}</span>
+        </div>
+
+        <RouterLink class="preview-link" :to="`/project/${project.id}`">查看详情</RouterLink>
       </div>
-      <div class="project-actions">
-        <button
-          class="preview-toggle"
-          type="button"
-          :aria-expanded="isPreviewOpen"
-          :aria-controls="`preview-${project.id}`"
-          @click="openPreview"
-        >
-          <span aria-hidden="true">+</span>
-          预览
-        </button>
-        <RouterLink class="open-link" :to="`/project/${project.id}`">OPEN</RouterLink>
+
+      <div class="project-footer">
+        <AppIcon
+          :name="project.name"
+          :accent="project.accent"
+          :gradient="project.gradient"
+          :image="project.iconImage"
+          :size="50"
+        />
+        <div class="project-copy">
+          <h3>{{ project.name }} <span>{{ project.nameEn }}</span></h3>
+          <p>{{ project.slogan }}</p>
+        </div>
+        <div class="project-actions">
+          <button
+            class="preview-toggle"
+            type="button"
+            :aria-expanded="isPreviewOpen"
+            :aria-controls="`preview-${project.id}`"
+            @click="openPreview"
+          >
+            <span aria-hidden="true">+</span>
+            预览
+          </button>
+          <RouterLink class="open-link" :to="`/project/${project.id}`">OPEN</RouterLink>
+        </div>
       </div>
-    </div>
-  </article>
+    </article>
+  </div>
 </template>
 
 <style scoped>
+.project-preview-tilt {
+  position: relative;
+  display: block;
+  transform-style: preserve-3d;
+}
+
+.project-preview-tilt :deep(.tilt-body) {
+  transform-origin: center center;
+  transform-style: preserve-3d;
+}
+
 .project-preview-card {
   --spotlight-x: 50%;
   --spotlight-y: 42%;
   position: relative;
-  isolation: isolate;
   min-height: 540px;
-  overflow: hidden;
-  background: #101010;
+  overflow: visible;
+  background: rgba(16, 16, 16, 0.72);
   color: var(--ink-1);
+  transform-style: preserve-3d;
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -172,7 +189,25 @@ const closePreview = (event) => {
   border-color: color-mix(in srgb, var(--tile-accent) 72%, var(--accent));
   box-shadow:
     0 0 0 1px rgba(215, 255, 0, 0.08),
-    0 24px 70px rgba(0, 0, 0, 0.36);
+    0 34px 90px rgba(0, 0, 0, 0.48),
+    0 0 42px color-mix(in srgb, var(--tile-accent) 20%, transparent);
+}
+
+.project-card-clip {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background: #101010;
+  transform: translateZ(-56px) scale(1.08);
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.project-preview-card:hover .project-card-clip,
+.project-preview-card:focus-within .project-card-clip,
+.project-preview-card.preview-open .project-card-clip {
+  transform: translateZ(-72px) scale(1.12);
 }
 
 .project-bg,
@@ -204,10 +239,11 @@ const closePreview = (event) => {
 .project-comet {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 3;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.25s ease;
+  transform-style: preserve-3d;
 }
 
 .project-spotlight {
@@ -225,6 +261,7 @@ const closePreview = (event) => {
       transparent 56% 100%
     );
   mix-blend-mode: screen;
+  transform: translateZ(46px);
 }
 
 .project-comet {
@@ -235,7 +272,7 @@ const closePreview = (event) => {
       color-mix(in srgb, var(--tile-accent) 72%, transparent) 48%,
       transparent 62% 100%
     );
-  transform: translateX(-120%);
+  transform: translate3d(-120%, 0, 64px);
 }
 
 .project-preview-card:hover .project-spotlight,
@@ -253,7 +290,7 @@ const closePreview = (event) => {
 
 .project-preview-card:hover .project-bg,
 .project-preview-card:focus-within .project-bg {
-  transform: scale(1.06);
+  transform: translateZ(-50px) scale(1.18);
   filter: grayscale(0.2) brightness(0.9) contrast(1.12);
 }
 
@@ -268,6 +305,8 @@ const closePreview = (event) => {
   font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
+  transform: translateZ(86px);
+  transition: transform 0.25s ease;
 }
 
 .project-meta span:not(:last-child)::after {
@@ -281,7 +320,9 @@ const closePreview = (event) => {
   left: 50%;
   top: 47%;
   z-index: 2;
-  transform: translate(-50%, -50%) scale(0.72);
+  transform: translate(-50%, -50%) translateZ(180px) scale(0.72);
+  transform-style: preserve-3d;
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .project-shot-frame {
@@ -296,7 +337,26 @@ const closePreview = (event) => {
   border-radius: 32px;
   background: #050505;
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.48);
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) translateZ(190px);
+  transform-style: preserve-3d;
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.32s ease, border-color 0.32s ease;
+}
+
+.project-preview-card:hover .project-phone,
+.project-preview-card:focus-within .project-phone,
+.project-preview-card.preview-open .project-phone {
+  transform: translate(-28%, -54%) translateZ(310px) scale(0.8) rotateZ(1.4deg);
+}
+
+.project-preview-card:hover .project-shot-frame,
+.project-preview-card:focus-within .project-shot-frame,
+.project-preview-card.preview-open .project-shot-frame {
+  border-color: color-mix(in srgb, var(--tile-accent) 62%, rgba(255, 255, 255, 0.18));
+  box-shadow:
+    0 44px 96px rgba(0, 0, 0, 0.62),
+    0 0 40px color-mix(in srgb, var(--tile-accent) 22%, transparent);
+  transform: translate(-28%, -54%) translateZ(330px) scale(1.08) rotateZ(1.4deg);
 }
 
 .project-shot {
@@ -308,31 +368,36 @@ const closePreview = (event) => {
 
 .project-shot-frame :deep(.tilt-body) {
   height: 100%;
+  transform-style: preserve-3d;
 }
 
 .project-phone :deep(.tilt-body) {
   display: block;
+  transform-style: preserve-3d;
 }
 
 .preview-panel {
   position: absolute;
   left: 18px;
-  right: 18px;
-  bottom: 112px;
-  z-index: 4;
+  top: 76px;
+  z-index: 8;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-height: calc(100% - 170px);
+  width: min(560px, calc(58% - 26px));
+  max-height: calc(100% - 192px);
   padding: 18px;
   border: 1px solid rgba(215, 255, 0, 0.42);
   background: rgba(8, 8, 8, 0.92);
-  box-shadow: 0 26px 60px rgba(0, 0, 0, 0.34);
+  box-shadow:
+    0 32px 72px rgba(0, 0, 0, 0.48),
+    0 0 30px color-mix(in srgb, var(--tile-accent) 14%, transparent);
   backdrop-filter: blur(14px);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transform: translateY(18px);
+  transform: translate3d(-18px, 24px, 260px) scale(0.96);
+  transform-style: preserve-3d;
   transition: opacity 0.24s ease, transform 0.24s ease, visibility 0.24s ease;
 }
 
@@ -342,7 +407,7 @@ const closePreview = (event) => {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transform: none;
+  transform: translate3d(0, 0, 260px) scale(1.02);
 }
 
 .preview-kicker,
@@ -419,6 +484,7 @@ const closePreview = (event) => {
   font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
+  transform: translateZ(24px);
 }
 
 .project-footer {
@@ -426,7 +492,7 @@ const closePreview = (event) => {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 5;
+  z-index: 7;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
@@ -435,10 +501,13 @@ const closePreview = (event) => {
   background: rgba(26, 26, 26, 0.9);
   border-top: 1px solid var(--grid-line);
   backdrop-filter: blur(12px);
+  transform: translateZ(150px);
+  transform-style: preserve-3d;
 }
 
 .project-copy {
   min-width: 0;
+  transform: translateZ(54px);
 }
 
 .project-footer h3 {
@@ -463,6 +532,7 @@ const closePreview = (event) => {
   display: flex;
   align-items: center;
   gap: 10px;
+  transform-style: preserve-3d;
 }
 
 .preview-toggle {
@@ -478,6 +548,8 @@ const closePreview = (event) => {
   font-size: 12px;
   font-weight: 900;
   cursor: pointer;
+  transform: translateZ(92px);
+  transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .preview-toggle span {
@@ -496,6 +568,8 @@ const closePreview = (event) => {
   color: var(--tile-accent);
   font-size: 12px;
   font-weight: 900;
+  transform: translateZ(92px);
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .preview-toggle:hover,
@@ -512,11 +586,38 @@ const closePreview = (event) => {
 
 @keyframes cardComet {
   to {
-    transform: translateX(120%);
+    transform: translate3d(120%, 0, 64px);
   }
 }
 
 @media (max-width: 900px) {
+  .project-preview-card {
+    overflow: hidden;
+  }
+
+  .project-card-clip,
+  .project-preview-card:hover .project-card-clip,
+  .project-preview-card:focus-within .project-card-clip,
+  .project-preview-card.preview-open .project-card-clip {
+    transform: none;
+  }
+
+  .preview-panel {
+    left: 18px;
+    right: 18px;
+    top: auto;
+    bottom: 142px;
+    width: auto;
+    max-height: calc(100% - 202px);
+    transform: translateY(18px);
+  }
+
+  .project-preview-card:hover .preview-panel,
+  .project-preview-card:focus-within .preview-panel,
+  .project-preview-card.preview-open .preview-panel {
+    transform: none;
+  }
+
   .project-footer {
     grid-template-columns: auto 1fr;
   }
@@ -545,6 +646,7 @@ const closePreview = (event) => {
   .project-shot-frame {
     top: 40%;
     width: min(220px, 58%);
+    transform: translate(-50%, -50%);
   }
 
   .preview-panel {
@@ -567,6 +669,30 @@ const closePreview = (event) => {
 
   .project-comet {
     animation: none;
+  }
+
+  .project-bg,
+  .project-fallback,
+  .project-overlay,
+  .project-card-clip,
+  .project-spotlight,
+  .project-comet,
+  .project-meta,
+  .preview-panel,
+  .project-footer,
+  .project-copy,
+  .preview-toggle,
+  .open-link,
+  .preview-link {
+    transform: none;
+  }
+
+  .project-phone {
+    transform: translate(-50%, -50%) scale(0.72);
+  }
+
+  .project-shot-frame {
+    transform: translate(-50%, -50%);
   }
 }
 </style>

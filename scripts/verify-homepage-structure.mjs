@@ -171,7 +171,7 @@ for (const pattern of [
 for (const pattern of [
   /from 'three'/,
   /WebGLRenderer/,
-  /MeshStandardMaterial/,
+  /MeshPhysicalMaterial/,
   /CanvasTexture/,
   /PlaneGeometry/,
   /ResizeObserver/,
@@ -180,8 +180,19 @@ for (const pattern of [
   /webgl-fallback/,
   /is-unfolded/,
   /createBrushTexture/,
+  /createReflectionTexture/,
   /TEXTURE_SIZE/,
   /texture\.repeat\.set\(1, 1\)/,
+  /EquirectangularReflectionMapping/,
+  /envMap:\s*reflectionTexture/,
+  /diagonalGlint/,
+  /edgeSheen/,
+  /bumpMap:\s*brushTexture/,
+  /bumpScale:\s*0\.035/,
+  /anisotropy:\s*0\.82/,
+  /roughness:\s*0\.2/,
+  /clearcoat:\s*0\.28/,
+  /metalness:\s*0\.86/,
   /unfoldedCameraZ/,
   /camera\.position\.z = THREE\.MathUtils\.lerp\(settings\.cameraZ, settings\.unfoldedCameraZ, unfoldProgress\)/,
   /triggerTouchUnfold/,
@@ -194,7 +205,9 @@ expectPattern(files.packageJson, packageJson, /"three":/)
 
 for (const pattern of [
   /baseGradient\.addColorStop\(0\.62/,
-  /baseGradient\.addColorStop\(1,\s*'#d9ddd6'\)/
+  /baseGradient\.addColorStop\(1,\s*'#d9ddd6'\)/,
+  /MeshStandardMaterial/,
+  /roughness:\s*0\.36/
 ]) {
   rejectPattern(files.heroCube, heroCube, pattern)
 }
