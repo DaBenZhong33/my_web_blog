@@ -668,6 +668,8 @@ onUnmounted(() => {
 }
 
 .signal-track {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   min-width: 200%;
   animation: signalMove 30s linear infinite;
@@ -945,6 +947,11 @@ onUnmounted(() => {
   color: #050505;
 }
 
+.metric-ticker {
+  display: flex;
+  align-items: baseline;
+}
+
 .metric-card p {
   margin-top: 12px;
   color: #555;
@@ -1083,6 +1090,8 @@ onUnmounted(() => {
 }
 
 .cta-button {
+  --btn-border-base: rgba(5, 5, 5, 0.45);
+  --btn-shimmer: rgba(5, 5, 5, 0.78);
   min-width: 276px;
   justify-content: center;
   border-color: rgba(5, 5, 5, 0.45);
@@ -1090,6 +1099,8 @@ onUnmounted(() => {
 }
 
 .cta-link {
+  --btn-border-base: rgba(5, 5, 5, 0.35);
+  --btn-shimmer: rgba(5, 5, 5, 0.72);
   border-color: rgba(5, 5, 5, 0.35);
   color: #050505;
 }
@@ -1244,6 +1255,17 @@ onUnmounted(() => {
     grid-template-columns: 1fr;
     gap: 18px;
     padding: 26px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-visual {
+    transition: none;
+  }
+
+  .hero-ring,
+  .signal-track {
+    animation: none;
   }
 }
 </style>
