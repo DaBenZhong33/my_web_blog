@@ -6,7 +6,6 @@ const root = process.cwd()
 const files = {
   home: 'src/views/HomeView.vue',
   rail: 'src/components/SectionRail.vue',
-  terminal: 'src/components/StatusTerminal.vue',
   preview: 'src/components/ProjectPreviewCard.vue',
   style: 'src/style.css'
 }
@@ -26,15 +25,18 @@ const expectPattern = (label, content, pattern) => {
   if (!pattern.test(content)) failures.push(`${label} missing ${pattern}`)
 }
 
+const rejectPattern = (label, content, pattern) => {
+  if (pattern.test(content)) failures.push(`${label} still contains ${pattern}`)
+}
+
 const home = readUtf8(files.home)
 const rail = readUtf8(files.rail)
-const terminal = readUtf8(files.terminal)
 const preview = readUtf8(files.preview)
 const style = readUtf8(files.style)
 
 const garbledPattern = /[\uFFFD\u951F\u00C3\u00C2]/
 
-for (const [label, content] of Object.entries({ home, rail, terminal, preview, style })) {
+for (const [label, content] of Object.entries({ home, rail, preview, style })) {
   if (garbledPattern.test(content)) failures.push(`${label} contains garbled text marker`)
 }
 
@@ -44,28 +46,47 @@ for (const id of ['intro', 'build', 'story', 'work', 'process', 'contact']) {
 
 for (const pattern of [
   /import SectionRail from/,
-  /import StatusTerminal from/,
   /import ProjectPreviewCard from/,
   /const sections = \[/,
-  /const statusItems = \[/,
   /activeSection = ref/,
   /scrollProgress = ref/,
   /IntersectionObserver/,
   /requestAnimationFrame/,
   /<SectionRail[\s\S]*@navigate="navigateToSection"/,
-  /<StatusTerminal\s+:items="statusItems"/,
   /<ProjectPreviewCard/
 ]) {
   expectPattern(files.home, home, pattern)
 }
 
 for (const pattern of [
-  /class="marked glitch-reveal"/,
-  /data-text="CODE SYSTEMS"/,
+  /class="marked">CODE SYSTEMS</,
   /metric-ticker/,
-  /splitTickerValue\(metric\.value\)/
+  /splitTickerValue\(metric\.value\)/,
+  /class="container project-grid"/,
+  /scroll-margin-top:\s*88px/,
+  /text-decoration-thickness:\s*3px/,
+  /opacity:\s*0\.76/
 ]) {
   expectPattern(files.home, home, pattern)
+}
+
+for (const pattern of [
+  /import StatusTerminal from/,
+  /const statusItems = \[/,
+  /<StatusTerminal/,
+  /class="marked glitch-reveal"/,
+  /data-text="CODE SYSTEMS"/,
+  /class="signal-strip"/,
+  /work-hscroll/,
+  /work-sticky/,
+  /work-track/,
+  /signalTrack/,
+  /tickerItems/,
+  /const avatars = \[/,
+  /class="trust-row"/,
+  /class="stars"/
+]) {
+  rejectPattern(files.home, home, pattern)
 }
 
 for (const pattern of [
@@ -78,26 +99,6 @@ for (const pattern of [
   /section-rail/
 ]) {
   expectPattern(files.rail, rail, pattern)
-}
-
-for (const pattern of [
-  /activeIndex = ref\(0\)/,
-  /activeItem = computed/,
-  /items: \{ type: Array, required: true \}/,
-  /@click="activeIndex = index"/,
-  /terminal-scan/,
-  /prefers-reduced-motion/
-]) {
-  expectPattern(files.terminal, terminal, pattern)
-}
-
-for (const pattern of [
-  /const tickerDigits = \[/,
-  /const splitTickerValue = \(value\) =>/,
-  /number-ticker/,
-  /ticker-digit-strip/
-]) {
-  expectPattern(files.terminal, terminal, pattern)
 }
 
 for (const pattern of [
@@ -130,12 +131,22 @@ for (const pattern of [
 
 for (const pattern of [
   /@keyframes digitTicker/,
-  /@keyframes glitchReveal/,
   /--btn-shimmer/,
-  /signal-strip::before/,
   /prefers-reduced-motion: reduce[\s\S]*ticker-digit-strip/
 ]) {
   expectPattern(files.style, style, pattern)
+}
+
+for (const pattern of [
+  /\.glitch-reveal/,
+  /@keyframes glitchReveal/,
+  /@keyframes glitchSliceTop/,
+  /@keyframes glitchSliceBottom/,
+  /\.marquee/,
+  /@keyframes marquee/,
+  /signal-strip::before/
+]) {
+  rejectPattern(files.style, style, pattern)
 }
 
 if (failures.length) {

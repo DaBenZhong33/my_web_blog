@@ -3,7 +3,6 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { projects } from '../data/projects.js'
 import SectionRail from '../components/SectionRail.vue'
-import StatusTerminal from '../components/StatusTerminal.vue'
 import ProjectPreviewCard from '../components/ProjectPreviewCard.vue'
 
 const assetBase = '/template-assets/'
@@ -15,29 +14,6 @@ const sections = [
   { id: 'work', label: 'Work', title: '作品' },
   { id: 'process', label: 'Process', title: '流程' },
   { id: 'contact', label: 'Contact', title: '联系' }
-]
-
-const statusItems = [
-  {
-    label: 'CURRENT BUILD',
-    value: '03 PRODUCTS',
-    detail: '正在维护 3 个产品，并持续把真实反馈同步回路线图。'
-  },
-  {
-    label: 'STACK ONLINE',
-    value: 'Vue 3 / SwiftUI / Flutter / Kotlin',
-    detail: '前端、移动端和自动化工具链都服务于更低维护成本。'
-  },
-  {
-    label: 'DATA MODE',
-    value: 'LOCAL-FIRST',
-    detail: '重要数据默认保留在用户手里，离线可用，隐私优先。'
-  },
-  {
-    label: 'NEXT SHIP',
-    value: 'PROJECT DETAILS',
-    detail: '下一步继续补齐作品详情页里的真实截图、指标和复盘。'
-  }
 ]
 
 const capabilities = [
@@ -140,35 +116,11 @@ const projectImages = [
   'bento-graphic.png'
 ]
 
-const tickerItems = [
-  '一个人也能做完整产品',
-  '离线优先',
-  '快速原型',
-  '长期维护',
-  '从设计到上线',
-  '自动化工作流'
-]
-
-const avatars = ['avatar-1.jpg', 'avatar-2.jpg', 'avatar-3.jpg']
-
 const activeSection = ref(sections[0].id)
 const scrollProgress = ref(0)
 const heroVisual = ref(null)
-const signalTrack = ref(null)
-const workWrap = ref(null)
-const workTrack = ref(null)
 let raf = null
 let sectionObserver = null
-
-// 跑马灯速度联动：滚动加速、上滚反转、停止后回归常速
-let signalAnimation = null
-let signalVelocity = 0
-let lastScrollY = 0
-let signalRaf = null
-
-// 作品区横向滚动（仅桌面端启用）
-const desktopQuery = window.matchMedia('(min-width: 1081px)')
-let workShift = 0
 
 const updateScrollProgress = () => {
   const doc = document.documentElement
@@ -176,48 +128,6 @@ const updateScrollProgress = () => {
   scrollProgress.value = scrollable > 0
     ? Math.min(Math.max(window.scrollY / scrollable, 0), 1)
     : 0
-}
-
-const measureWork = () => {
-  if (!workWrap.value || !workTrack.value) return
-
-  if (!desktopQuery.matches) {
-    workWrap.value.style.height = ''
-    workTrack.value.style.transform = ''
-    workShift = 0
-    return
-  }
-
-  const trackWidth = workTrack.value.scrollWidth
-  const viewWidth = workTrack.value.parentElement.clientWidth
-  workShift = Math.max(trackWidth - viewWidth, 0)
-  workWrap.value.style.height = `${window.innerHeight + workShift}px`
-}
-
-const updateWorkScroll = () => {
-  if (!workWrap.value || !workTrack.value || !desktopQuery.matches) return
-
-  const rect = workWrap.value.getBoundingClientRect()
-  const total = rect.height - window.innerHeight
-  const ratio = total > 0 ? Math.min(Math.max(-rect.top / total, 0), 1) : 0
-  workTrack.value.style.transform = `translate3d(${(-ratio * workShift).toFixed(1)}px, 0, 0)`
-}
-
-const tickSignal = () => {
-  signalRaf = requestAnimationFrame(tickSignal)
-  if (!signalAnimation) return
-
-  // 速度逐帧衰减，播放倍率平滑插值到目标值
-  signalVelocity *= 0.92
-  const boost = Math.min(Math.max(signalVelocity * 0.06, -3), 4)
-  const target = 1 + boost
-  const current = signalAnimation.playbackRate
-  signalAnimation.playbackRate = current + (target - current) * 0.14
-}
-
-const onResize = () => {
-  measureWork()
-  updateWorkScroll()
 }
 
 const onScroll = () => {
@@ -228,10 +138,7 @@ const onScroll = () => {
       const offset = Math.min(window.scrollY * -0.08, 0)
       heroVisual.value.style.setProperty('--hero-shift', `${offset}px`)
     }
-    signalVelocity = window.scrollY - lastScrollY
-    lastScrollY = window.scrollY
     updateScrollProgress()
-    updateWorkScroll()
   })
 }
 
@@ -277,25 +184,13 @@ onMounted(() => {
   }
 
   updateScrollProgress()
-  lastScrollY = window.scrollY
-
-  if (signalTrack.value && !prefersReducedMotion()) {
-    signalAnimation = signalTrack.value.getAnimations()[0] ?? null
-    if (signalAnimation) signalRaf = requestAnimationFrame(tickSignal)
-  }
-
-  measureWork()
-  updateWorkScroll()
-  window.addEventListener('resize', onResize, { passive: true })
   window.addEventListener('scroll', onScroll, { passive: true })
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', onScroll)
-  window.removeEventListener('resize', onResize)
   sectionObserver?.disconnect()
   if (raf) cancelAnimationFrame(raf)
-  if (signalRaf) cancelAnimationFrame(signalRaf)
 })
 </script>
 
@@ -313,9 +208,9 @@ onUnmounted(() => {
         <p class="eyebrow">Independent App Studio · 独立开发者</p>
         <h1 class="hero-title">
           <span>BUILT BY</span>
-          <span class="marked">大笨钟,</span>
+          <span>大笨钟,</span>
           <span>SHIPPED WITH</span>
-          <span class="marked glitch-reveal" data-text="CODE SYSTEMS">CODE SYSTEMS</span>
+          <span class="marked">CODE SYSTEMS</span>
         </h1>
         <p class="hero-sub">
           我把个人产品当成小型系统来做：从设计、代码、数据、自动化到上线维护，
@@ -326,41 +221,21 @@ onUnmounted(() => {
           <RouterLink to="/about" class="btn btn-ghost" v-magnetic>了解我</RouterLink>
         </div>
 
-        <div class="trust-row" v-reveal>
-          <div class="avatar-stack" aria-hidden="true">
-            <img v-for="avatar in avatars" :key="avatar" :src="assetBase + avatar" alt="" />
-          </div>
-          <div>
-            <p class="stars">★★★★★</p>
-            <p class="trust-copy">独立设计、开发并持续维护 3 个产品</p>
-          </div>
-        </div>
       </div>
 
       <div class="hero-visual" ref="heroVisual" v-reveal>
-        <div class="hero-frame" v-tilt="7">
+        <div class="hero-frame">
           <img
             class="hero-person"
             src="/template-assets/hero-ai.png"
             alt="AI 与人类协作的半机械人物"
           />
-          <div class="hero-ring" aria-hidden="true"></div>
-          <div class="hero-callout">HUMAN + CODE</div>
-          <StatusTerminal :items="statusItems" class="hero-terminal" />
         </div>
       </div>
     </div>
 
     <div class="hero-wordmark" aria-hidden="true">大笨钟+</div>
   </section>
-
-  <div class="signal-strip" aria-hidden="true">
-    <div class="signal-track" ref="signalTrack">
-      <span v-for="(item, i) in [...tickerItems, ...tickerItems]" :key="i">
-        <i></i>{{ item }}
-      </span>
-    </div>
-  </div>
 
   <section id="build" class="section service-section">
     <div class="container section-split">
@@ -476,20 +351,15 @@ onUnmounted(() => {
       <RouterLink to="/about" class="btn btn-ghost section-button" v-magnetic>更多背景</RouterLink>
     </div>
 
-    <div class="work-hscroll" ref="workWrap">
-      <div class="work-sticky">
-        <div class="work-track" ref="workTrack">
-          <ProjectPreviewCard
-            v-for="(p, i) in projects"
-            :key="p.id"
-            class="work-card"
-            :project="p"
-            :image="projectImages[i % projectImages.length]"
-            :asset-base="assetBase"
-            v-reveal
-          />
-        </div>
-      </div>
+    <div class="container project-grid">
+      <ProjectPreviewCard
+        v-for="(p, i) in projects"
+        :key="p.id"
+        :project="p"
+        :image="projectImages[i % projectImages.length]"
+        :asset-base="assetBase"
+        v-reveal
+      />
     </div>
   </section>
 
@@ -575,6 +445,8 @@ onUnmounted(() => {
 }
 
 .hero-copy {
+  position: relative;
+  z-index: 2;
   max-width: 620px;
 }
 
@@ -595,8 +467,8 @@ onUnmounted(() => {
   color: var(--ink-1);
   text-decoration: underline;
   text-decoration-color: var(--accent);
-  text-decoration-thickness: 7px;
-  text-underline-offset: -3px;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 6px;
   text-decoration-skip-ink: none;
 }
 
@@ -615,44 +487,6 @@ onUnmounted(() => {
   margin-top: 34px;
 }
 
-.trust-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 46px;
-}
-
-.avatar-stack {
-  display: flex;
-}
-
-.avatar-stack img {
-  width: 38px;
-  height: 38px;
-  object-fit: cover;
-  border: 1px solid #0a0a0a;
-  margin-left: -10px;
-  filter: grayscale(1);
-}
-
-.avatar-stack img:first-child {
-  margin-left: 0;
-}
-
-.stars {
-  color: var(--accent);
-  font-size: 14px;
-  line-height: 1;
-}
-
-.trust-copy {
-  margin-top: 4px;
-  color: var(--ink-1);
-  font-size: 13px;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
 .hero-visual {
   --hero-shift: 0px;
   position: relative;
@@ -666,109 +500,26 @@ onUnmounted(() => {
   inset: 0 -18px 0 0;
 }
 
-.hero-frame :deep(.tilt-body) {
-  height: 100%;
-}
-
 .hero-person {
   position: absolute;
   right: -40px;
   bottom: -90px;
   width: min(760px, 58vw);
   max-width: none;
-  filter: saturate(0.85) contrast(1.08);
+  opacity: 0.76;
+  filter: saturate(0.7) brightness(0.82) contrast(1);
   mix-blend-mode: lighten;
-}
-
-.hero-ring {
-  position: absolute;
-  right: 232px;
-  bottom: 104px;
-  width: 118px;
-  height: 118px;
-  border: 1px solid rgba(215, 255, 0, 0.7);
-  animation: scanPulse 2.4s ease-in-out infinite;
-}
-
-.hero-callout {
-  position: absolute;
-  border: 1px solid var(--border-strong);
-  background: rgba(27, 27, 27, 0.84);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.32);
-}
-
-.hero-callout {
-  right: 506px;
-  bottom: 230px;
-  padding: 7px 12px;
-  color: #050505;
-  background: var(--ink-1);
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.hero-callout::after {
-  content: "";
-  position: absolute;
-  top: -16px;
-  right: -18px;
-  width: 24px;
-  height: 24px;
-  background: var(--ink-1);
-  clip-path: polygon(0 28%, 100% 0, 62% 100%);
-}
-
-.hero-terminal {
-  position: absolute;
-  right: 16px;
-  top: 308px;
 }
 
 .hero-wordmark {
   position: absolute;
   left: -18px;
-  bottom: -84px;
-  color: rgba(255, 255, 255, 0.06);
-  font-size: 220px;
+  bottom: -48px;
+  color: rgba(255, 255, 255, 0.035);
+  font-size: 160px;
   line-height: 0.8;
   font-weight: 900;
   pointer-events: none;
-}
-
-.signal-strip {
-  position: relative;
-  z-index: 2;
-  overflow: hidden;
-  border-top: 1px solid var(--grid-line);
-  border-bottom: 1px solid var(--grid-line);
-  background: #050505;
-  white-space: nowrap;
-}
-
-.signal-track {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  min-width: 200%;
-  animation: signalMove 30s linear infinite;
-}
-
-.signal-strip span {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 18px 24px;
-  color: var(--ink-1);
-  font-size: 13px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.signal-strip i {
-  width: 10px;
-  height: 10px;
-  border: 2px solid var(--accent);
 }
 
 .section {
@@ -1048,30 +799,11 @@ onUnmounted(() => {
   justify-self: end;
 }
 
-/* ===== 作品区：纵向滚动驱动横向平移（桌面端） ===== */
-.work-hscroll {
-  margin-top: 70px;
-}
-
-.work-sticky {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-}
-
-.work-track {
-  display: flex;
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 18px;
-  padding: 0 max(40px, calc((100vw - 1360px) / 2));
-  will-change: transform;
-}
-
-.work-card {
-  flex: none;
-  width: min(560px, 42vw);
+  margin-top: 70px;
 }
 
 .process-section {
@@ -1203,21 +935,6 @@ onUnmounted(() => {
   color: #050505;
 }
 
-@keyframes scanPulse {
-  0%, 100% {
-    opacity: 0.35;
-    transform: scale(0.86);
-  }
-  50% {
-    opacity: 0.9;
-    transform: scale(1.05);
-  }
-}
-
-@keyframes signalMove {
-  to { transform: translateX(-50%); }
-}
-
 @media (max-width: 1080px) {
   .zel-hero {
     min-height: auto;
@@ -1253,11 +970,6 @@ onUnmounted(() => {
     width: min(720px, 96vw);
   }
 
-  .hero-terminal {
-    right: 22px;
-    top: 292px;
-  }
-
   .capability-row,
   .founder-card {
     grid-template-columns: 1fr;
@@ -1272,26 +984,9 @@ onUnmounted(() => {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* 作品区回退为纵向网格 */
-  .work-hscroll {
-    height: auto !important;
-  }
-
-  .work-sticky {
-    position: static;
-    height: auto;
-    overflow: visible;
-  }
-
-  .work-track {
-    display: grid;
+  .project-grid,
+  .metric-grid {
     grid-template-columns: repeat(2, 1fr);
-    padding: 0 40px;
-    transform: none !important;
-  }
-
-  .work-card {
-    width: auto;
   }
 
   .final-cta {
@@ -1306,6 +1001,12 @@ onUnmounted(() => {
 @media (max-width: 720px) {
   .hero-title {
     font-size: 40px;
+    line-height: 1;
+  }
+
+  .hero-title .marked {
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
   }
 
   .hero-sub {
@@ -1316,19 +1017,6 @@ onUnmounted(() => {
     min-height: 520px;
   }
 
-  .hero-callout,
-  .hero-ring {
-    display: none;
-  }
-
-  .hero-terminal {
-    position: relative;
-    top: auto;
-    right: auto;
-    width: min(100%, 360px);
-    margin: 24px auto 0;
-  }
-
   .hero-wordmark {
     font-size: 96px;
     bottom: -30px;
@@ -1336,6 +1024,12 @@ onUnmounted(() => {
 
   .section {
     padding-top: 82px;
+  }
+
+  .mega-title {
+    font-size: 30px;
+    line-height: 1.06;
+    overflow-wrap: break-word;
   }
 
   .capability-row {
@@ -1369,9 +1063,9 @@ onUnmounted(() => {
     grid-template-columns: 1fr;
   }
 
-  .work-track {
+  .project-grid,
+  .metric-grid {
     grid-template-columns: 1fr;
-    padding: 0 16px;
   }
 
   .process-row {
@@ -1386,9 +1080,5 @@ onUnmounted(() => {
     transition: none;
   }
 
-  .hero-ring,
-  .signal-track {
-    animation: none;
-  }
 }
 </style>
