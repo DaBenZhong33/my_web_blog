@@ -145,10 +145,13 @@ const activeScreen = ref(0)
 }
 
 .back-link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-right: 12px;
   color: var(--ink-3);
   font-size: 14px;
-  margin-bottom: 36px;
+  margin-bottom: 28px;
   transition: color 0.2s;
 }
 
@@ -228,6 +231,10 @@ const activeScreen = ref(0)
 }
 
 .screen-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
   font-family: var(--font-sans);
   font-size: 14px;
   padding: 8px 20px;

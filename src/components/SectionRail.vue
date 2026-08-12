@@ -89,7 +89,7 @@ const formatIndex = (index) => String(index + 1).padStart(2, '0')
   gap: 4px 8px;
   align-items: baseline;
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   padding: 8px 0;
   border: 0;
   border-left: 2px solid transparent;
@@ -183,10 +183,10 @@ const formatIndex = (index) => String(index + 1).padStart(2, '0')
   .rail-item {
     display: inline-flex;
     width: auto;
-    min-height: 36px;
+    min-height: 44px;
     align-items: center;
     gap: 8px;
-    padding: 0 12px;
+    padding: 0 14px;
     border: 1px solid var(--border);
     background: rgba(255, 255, 255, 0.06);
   }

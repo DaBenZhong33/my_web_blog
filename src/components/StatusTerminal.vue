@@ -159,7 +159,7 @@ const splitTickerValue = (value) => {
   grid-template-columns: minmax(112px, 0.9fr) minmax(0, 1.1fr);
   gap: 10px;
   align-items: center;
-  min-height: 42px;
+  min-height: 44px;
   padding: 10px 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);

@@ -77,9 +77,10 @@ main {
 }
 
 .logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
+  min-height: 44px;
   font-weight: 900;
   font-size: 19px;
   text-transform: uppercase;
@@ -106,11 +107,15 @@ main {
 
 .nav-links {
   display: flex;
-  gap: 28px;
+  gap: 12px;
   margin-left: auto;
 }
 
 .nav-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
   font-size: 13px;
   font-weight: 900;
   text-transform: uppercase;
@@ -124,7 +129,7 @@ main {
 }
 
 .nav-cta {
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 22px;
   font-size: 12px;
 }
@@ -175,10 +180,15 @@ main {
 
 .footer-links {
   display: flex;
-  gap: 24px;
+  gap: 8px 16px;
+  flex-wrap: wrap;
 }
 
 .footer-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
   color: var(--ink-2);
   font-size: 13px;
   font-weight: 900;

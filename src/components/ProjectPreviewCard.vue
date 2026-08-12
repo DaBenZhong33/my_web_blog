@@ -366,6 +366,10 @@ const closePreview = (event) => {
 }
 
 .preview-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 2px;
   align-self: flex-start;
   color: var(--tile-accent);
   font-size: 12px;
@@ -420,9 +424,10 @@ const closePreview = (event) => {
 .preview-toggle {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  min-height: 34px;
-  padding: 0 10px;
+  min-height: 44px;
+  padding: 0 14px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.06);
   color: var(--ink-1);
@@ -438,6 +443,12 @@ const closePreview = (event) => {
 }
 
 .open-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 4px;
   color: var(--tile-accent);
   font-size: 12px;
   font-weight: 900;
