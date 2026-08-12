@@ -82,6 +82,35 @@ const metrics = [
   { label: 'STACK RANGE', value: '4+', desc: '移动端、前端、后端与自动化工具链' }
 ]
 
+const tickerDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+const splitTickerValue = (value) => {
+  const text = String(value)
+
+  return text
+    .split(/(\d+[%+]?)/g)
+    .filter(Boolean)
+    .map((part, index) => {
+      const match = part.match(/^(\d+)([%+]?)$/)
+
+      if (!match) {
+        return {
+          key: `${index}-${part}`,
+          type: 'text',
+          value: part
+        }
+      }
+
+      return {
+        key: `${index}-${part}`,
+        type: 'number',
+        value: match[1],
+        suffix: match[2],
+        digits: match[1].split('')
+      }
+    })
+}
+
 const processSteps = [
   {
     no: '[01]',
@@ -221,7 +250,7 @@ onUnmounted(() => {
           <span>BUILT BY</span>
           <span class="marked">大笨钟,</span>
           <span>SHIPPED WITH</span>
-          <span class="marked">CODE SYSTEMS</span>
+          <span class="marked glitch-reveal" data-text="CODE SYSTEMS">CODE SYSTEMS</span>
         </h1>
         <p class="hero-sub">
           我把个人产品当成小型系统来做：从设计、代码、数据、自动化到上线维护，
@@ -347,7 +376,27 @@ onUnmounted(() => {
     <div class="container metric-grid">
       <div v-for="metric in metrics" :key="metric.label" class="metric-card corner-frame" v-reveal>
         <span class="metric-label">{{ metric.label }}</span>
-        <strong>{{ metric.value }}</strong>
+        <strong class="metric-ticker" :aria-label="metric.value">
+          <template v-for="part in splitTickerValue(metric.value)" :key="part.key">
+            <span v-if="part.type === 'text'" aria-hidden="true">{{ part.value }}</span>
+            <span v-else class="number-ticker" aria-hidden="true">
+              <span
+                v-for="(digit, digitIndex) in part.digits"
+                :key="`${part.key}-${digitIndex}`"
+                class="ticker-digit"
+                :style="{
+                  '--ticker-digit': Number(digit),
+                  '--ticker-delay': `${digitIndex * 70}ms`
+                }"
+              >
+                <span class="ticker-digit-strip">
+                  <span v-for="rollDigit in tickerDigits" :key="rollDigit">{{ rollDigit }}</span>
+                </span>
+              </span>
+              <span v-if="part.suffix" class="ticker-suffix">{{ part.suffix }}</span>
+            </span>
+          </template>
+        </strong>
         <p>{{ metric.desc }}</p>
       </div>
     </div>
