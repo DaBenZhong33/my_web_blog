@@ -21,8 +21,8 @@ const seededUnit = (index, salt) => {
 
 export const createBreathProfile = (index) => {
   const safeIndex = Number.isFinite(index) ? Math.max(0, Math.floor(index)) : 0
-  const scale = 1.02 + seededUnit(safeIndex, 12.9898) * 0.05
-  const duration = 2.8 + seededUnit(safeIndex, 78.233) * 2.4
+  const scale = 1.02 + seededUnit(safeIndex, 12.9898) * 0.2
+  const duration = 1.8 + seededUnit(safeIndex, 78.233) * 1.4
   const delay = -seededUnit(safeIndex, 39.425) * duration
 
   return {

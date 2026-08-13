@@ -25,10 +25,10 @@ const firstProfile = createBreathProfile(0)
 const repeatedProfile = createBreathProfile(0)
 assert.deepEqual(firstProfile, repeatedProfile)
 
-for (let index = 0; index < 18; index += 1) {
+for (let index = 0; index < 12; index += 1) {
   const profile = createBreathProfile(index)
-  assert.ok(profile.scale >= 1.02 && profile.scale <= 1.07)
-  assert.ok(profile.duration >= 2.8 && profile.duration <= 5.2)
+  assert.ok(profile.scale >= 1.02 && profile.scale <= 1.22)
+  assert.ok(profile.duration >= 1.8 && profile.duration <= 3.2)
   assert.ok(profile.delay <= 0)
 }
 
@@ -39,8 +39,9 @@ const footerComponent = readFileSync(
   'utf8'
 )
 
-assert.match(footerComponent, /bars:\s*\{\s*type:\s*Number,\s*default:\s*18\s*\}/)
-assert.match(footerComponent, /clampNumber\(props\.bars,\s*1,\s*64,\s*18\)/)
-assert.match(footerComponent, /:width="columnWidth \* 1\.08"/)
+assert.match(footerComponent, /bars:\s*\{\s*type:\s*Number,\s*default:\s*12\s*\}/)
+assert.match(footerComponent, /clampNumber\(props\.bars,\s*1,\s*64,\s*12\)/)
+assert.match(footerComponent, /:width="columnWidth \* 2\.0"/)
+assert.match(footerComponent, /height:\s*min\(38vh,\s*520px\);/)
 
 console.log('Footer spring glow motion verification passed.')
