@@ -20,6 +20,7 @@ let cubeGroup
 let brushTexture
 let reflectionTexture
 let core
+let coreSpokes
 let resizeObserver
 let animationFrame = 0
 let unfoldTarget = 0
@@ -27,12 +28,18 @@ let unfoldProgress = 0
 let lastFrameTime = 0
 let touchTimer = 0
 let motionQuery
+let spinRotation = 0.52
+let pointerTargetX = 0
+let pointerTargetY = 0
+let pointerTiltX = 0
+let pointerTiltY = 0
 
 const faceDefinitions = [
   {
     name: 'front',
     closedPosition: new THREE.Vector3(0, 0, HALF_SIZE),
     normal: new THREE.Vector3(0, 0, 1),
+    stagger: 0,
     openPosition: new THREE.Vector3(0.08, 0, 2.25),
     closedRotation: new THREE.Euler(0, 0, 0),
     openRotation: new THREE.Euler(0.24, -0.18, 0.16)
@@ -41,6 +48,7 @@ const faceDefinitions = [
     name: 'back',
     closedPosition: new THREE.Vector3(0, 0, -HALF_SIZE),
     normal: new THREE.Vector3(0, 0, -1),
+    stagger: 0,
     openPosition: new THREE.Vector3(-0.14, 0.02, -2.45),
     closedRotation: new THREE.Euler(0, Math.PI, 0),
     openRotation: new THREE.Euler(-0.22, Math.PI + 0.24, -0.18)
@@ -49,6 +57,7 @@ const faceDefinitions = [
     name: 'right',
     closedPosition: new THREE.Vector3(HALF_SIZE, 0, 0),
     normal: new THREE.Vector3(1, 0, 0),
+    stagger: 0.08,
     openPosition: new THREE.Vector3(2.85, 0.14, 0.12),
     closedRotation: new THREE.Euler(0, Math.PI / 2, 0),
     openRotation: new THREE.Euler(0.18, Math.PI / 2 + 0.28, 0.22)
@@ -57,6 +66,7 @@ const faceDefinitions = [
     name: 'left',
     closedPosition: new THREE.Vector3(-HALF_SIZE, 0, 0),
     normal: new THREE.Vector3(-1, 0, 0),
+    stagger: 0.08,
     openPosition: new THREE.Vector3(-2.85, -0.14, -0.1),
     closedRotation: new THREE.Euler(0, -Math.PI / 2, 0),
     openRotation: new THREE.Euler(-0.2, -Math.PI / 2 - 0.26, -0.24)
@@ -65,6 +75,7 @@ const faceDefinitions = [
     name: 'top',
     closedPosition: new THREE.Vector3(0, HALF_SIZE, 0),
     normal: new THREE.Vector3(0, 1, 0),
+    stagger: 0.16,
     openPosition: new THREE.Vector3(0.18, 2.65, 0.06),
     closedRotation: new THREE.Euler(-Math.PI / 2, 0, 0),
     openRotation: new THREE.Euler(-Math.PI / 2 - 0.3, 0.2, -0.2)
@@ -73,6 +84,7 @@ const faceDefinitions = [
     name: 'bottom',
     closedPosition: new THREE.Vector3(0, -HALF_SIZE, 0),
     normal: new THREE.Vector3(0, -1, 0),
+    stagger: 0.16,
     openPosition: new THREE.Vector3(-0.18, -2.65, 0.08),
     closedRotation: new THREE.Euler(Math.PI / 2, 0, 0),
     openRotation: new THREE.Euler(Math.PI / 2 + 0.28, -0.18, 0.2)
@@ -88,8 +100,8 @@ const getSettings = () => {
       unfoldedCameraZ: 9,
       cubeScale: 0.76,
       explodeDistance: 0.72,
-      rotationSpeed: 0.006,
-      unfoldedSpeed: 0.0018
+      rotationSpeed: 0.0042,
+      unfoldedSpeed: 0.0011
     }
   }
 
@@ -99,8 +111,8 @@ const getSettings = () => {
       unfoldedCameraZ: 9.15,
       cubeScale: 0.84,
       explodeDistance: 0.86,
-      rotationSpeed: 0.007,
-      unfoldedSpeed: 0.002
+      rotationSpeed: 0.0048,
+      unfoldedSpeed: 0.0012
     }
   }
 
@@ -109,12 +121,18 @@ const getSettings = () => {
     unfoldedCameraZ: 8.75,
     cubeScale: 0.92,
     explodeDistance: 1,
-    rotationSpeed: 0.008,
-    unfoldedSpeed: 0.0024
+    rotationSpeed: 0.0052,
+    unfoldedSpeed: 0.0014
   }
 }
 
 const easeOutCubic = (value) => 1 - Math.pow(1 - value, 3)
+const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1)
+const easeOutBack = (value) => {
+  const overshoot = 1.08
+  const shifted = value - 1
+  return 1 + (overshoot + 1) * shifted ** 3 + overshoot * shifted ** 2
+}
 
 const createBrushTexture = () => {
   const canvas = document.createElement('canvas')
@@ -204,25 +222,49 @@ const updateFaceTargets = () => {
   }
 }
 
+const getFaceProgress = (stagger) => {
+  const duration = 0.84
+  return easeOutBack(clamp01((unfoldProgress - stagger) / duration))
+}
+
+const updateCoreSpokes = (visibility) => {
+  if (!coreSpokes || !cubeGroup) return
+  const positions = coreSpokes.geometry.attributes.position.array
+
+  cubeGroup.userData.faces.forEach((face, index) => {
+    const offset = index * 6
+    positions[offset] = 0
+    positions[offset + 1] = 0
+    positions[offset + 2] = 0
+    positions[offset + 3] = face.position.x * 0.82
+    positions[offset + 4] = face.position.y * 0.82
+    positions[offset + 5] = face.position.z * 0.82
+  })
+
+  coreSpokes.geometry.attributes.position.needsUpdate = true
+  coreSpokes.material.opacity = visibility * 0.52
+}
+
 const updateFaceTransforms = () => {
   if (!cubeGroup) return
 
-  const eased = easeOutCubic(unfoldProgress)
-
   for (const face of cubeGroup.userData.faces) {
     const { definition, openPosition } = face.userData
-    face.position.lerpVectors(definition.closedPosition, openPosition, eased)
+    const faceProgress = getFaceProgress(definition.stagger)
+    face.position.lerpVectors(definition.closedPosition, openPosition, faceProgress)
     face.rotation.set(
-      THREE.MathUtils.lerp(definition.closedRotation.x, definition.openRotation.x, eased),
-      THREE.MathUtils.lerp(definition.closedRotation.y, definition.openRotation.y, eased),
-      THREE.MathUtils.lerp(definition.closedRotation.z, definition.openRotation.z, eased)
+      THREE.MathUtils.lerp(definition.closedRotation.x, definition.openRotation.x, faceProgress),
+      THREE.MathUtils.lerp(definition.closedRotation.y, definition.openRotation.y, faceProgress),
+      THREE.MathUtils.lerp(definition.closedRotation.z, definition.openRotation.z, faceProgress)
     )
   }
 
+  const coreVisibility = THREE.MathUtils.smoothstep(unfoldProgress, 0.28, 0.82)
   if (core) {
-    core.scale.setScalar(THREE.MathUtils.lerp(0.7, 1.85, eased))
-    core.material.opacity = THREE.MathUtils.lerp(0.16, 0.42, eased)
+    core.scale.setScalar(THREE.MathUtils.lerp(0.55, 2.15, coreVisibility))
+    core.material.opacity = THREE.MathUtils.lerp(0.025, 0.72, coreVisibility)
   }
+  updateCoreSpokes(coreVisibility)
 }
 
 const renderOnce = () => {
@@ -255,10 +297,15 @@ const animate = (time) => {
   if (Math.abs(unfoldTarget - unfoldProgress) < 0.001) unfoldProgress = unfoldTarget
 
   const speed = THREE.MathUtils.lerp(settings.rotationSpeed, settings.unfoldedSpeed, unfoldProgress)
+  spinRotation += speed * delta
+  pointerTiltX += (-pointerTargetY * 0.055 - pointerTiltX) * 0.055 * delta
+  pointerTiltY += (pointerTargetX * 0.085 - pointerTiltY) * 0.055 * delta
+
   camera.position.z = THREE.MathUtils.lerp(settings.cameraZ, settings.unfoldedCameraZ, unfoldProgress)
-  cubeGroup.rotation.y += speed * delta
-  cubeGroup.rotation.x = -0.26 + Math.sin(time * 0.00045) * 0.035
-  cubeGroup.rotation.z = Math.sin(time * 0.00032) * 0.018
+  cubeGroup.position.y = Math.sin(time * 0.00072) * 0.045 * (1 - unfoldProgress * 0.55)
+  cubeGroup.rotation.x = -0.26 + pointerTiltX + Math.sin(time * 0.0004) * 0.022
+  cubeGroup.rotation.y = spinRotation + pointerTiltY
+  cubeGroup.rotation.z = Math.sin(time * 0.00028) * 0.012
 
   updateFaceTransforms()
   renderer.render(scene, camera)
@@ -369,17 +416,33 @@ const createScene = () => {
   scene.environment = reflectionTexture
   cubeGroup = new THREE.Group()
   cubeGroup.name = 'brushed-metal-cube'
-  cubeGroup.rotation.set(-0.26, 0.52, 0)
+  spinRotation = 0.52
+  cubeGroup.rotation.set(-0.26, spinRotation, 0)
   cubeGroup.userData.faces = faceDefinitions.map(createFace)
   for (const face of cubeGroup.userData.faces) cubeGroup.add(face)
 
   const coreMaterial = new THREE.MeshBasicMaterial({
     color: ACCENT,
     transparent: true,
-    opacity: 0.16
+    opacity: 0.025
   })
   core = new THREE.Mesh(new THREE.SphereGeometry(0.085, 20, 20), coreMaterial)
   cubeGroup.add(core)
+
+  const spokeGeometry = new THREE.BufferGeometry()
+  const spokePositions = new Float32Array(faceDefinitions.length * 6)
+  const spokeAttribute = new THREE.BufferAttribute(spokePositions, 3)
+  spokeAttribute.setUsage(THREE.DynamicDrawUsage)
+  spokeGeometry.setAttribute('position', spokeAttribute)
+
+  const spokeMaterial = new THREE.LineBasicMaterial({
+    color: ACCENT,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false
+  })
+  coreSpokes = new THREE.LineSegments(spokeGeometry, spokeMaterial)
+  cubeGroup.add(coreSpokes)
 
   scene.add(cubeGroup)
 }
@@ -395,7 +458,20 @@ const handlePointerEnter = (event) => {
   if (event.pointerType === 'mouse' || event.pointerType === 'pen') setUnfolded(true)
 }
 
+const handlePointerMove = (event) => {
+  if (reducedMotion.value || !root.value) return
+  const bounds = root.value.getBoundingClientRect()
+  pointerTargetX = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2
+  pointerTargetY = ((event.clientY - bounds.top) / bounds.height - 0.5) * 2
+}
+
+const resetPointerTarget = () => {
+  pointerTargetX = 0
+  pointerTargetY = 0
+}
+
 const handlePointerLeave = (event) => {
+  resetPointerTarget()
   if (event.pointerType === 'mouse' || event.pointerType === 'pen') setUnfolded(false)
 }
 
@@ -413,6 +489,9 @@ const handleMotionPreference = () => {
     unfoldTarget = 0
     unfoldProgress = 0
     isUnfolded.value = false
+    resetPointerTarget()
+    pointerTiltX = 0
+    pointerTiltY = 0
     renderOnce()
   } else {
     startAnimation()
@@ -456,6 +535,11 @@ const disposeThreeScene = () => {
   brushTexture = null
   reflectionTexture = null
   core = null
+  coreSpokes = null
+  pointerTargetX = 0
+  pointerTargetY = 0
+  pointerTiltX = 0
+  pointerTiltY = 0
 }
 
 onMounted(() => {
@@ -496,6 +580,7 @@ onBeforeUnmount(disposeThreeScene)
     }"
     aria-hidden="true"
     @pointerenter="handlePointerEnter"
+    @pointermove="handlePointerMove"
     @pointerleave="handlePointerLeave"
     @pointerdown="triggerTouchUnfold"
   >
