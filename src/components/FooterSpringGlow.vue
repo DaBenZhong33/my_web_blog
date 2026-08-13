@@ -15,14 +15,14 @@ const VBW = 1271
 const VBH = 599
 
 const RUIXEN_STOPS = [
-  { offset: 0, color: '#340B05' },
-  { offset: 0.1827, color: '#0358F7' },
-  { offset: 0.2837, color: '#5092C7' },
-  { offset: 0.4135, color: '#E1ECFE' },
-  { offset: 0.5866, color: '#FFD400' },
-  { offset: 0.6827, color: '#FA3D1D' },
-  { offset: 0.8029, color: '#FD02F5' },
-  { offset: 1, color: '#FFC0FD00' }
+  { offset: 0, color: '#06140B' },
+  { offset: 0.18, color: '#0358F7' },
+  { offset: 0.32, color: '#6FA8FF' },
+  { offset: 0.48, color: '#E1ECFE' },
+  { offset: 0.6, color: '#F7FFE8' },
+  { offset: 0.72, color: '#D7FF00' },
+  { offset: 0.86, color: '#8DFF3D' },
+  { offset: 1, color: '#D7FF0000' }
 ]
 
 const tailRef = ref(null)
