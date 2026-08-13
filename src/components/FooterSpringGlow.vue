@@ -37,15 +37,16 @@ let targetProgress = 0
 let currentProgress = 0
 let velocity = 0
 let animationFrame = 0
+let layoutFrame = 0
 let motionQuery = null
+let resizeObserver = null
 
-const clamp01 = (value, fallback = 0) => {
+const clampNumber = (value, min, max, fallback) => {
   const safeValue = Number.isFinite(value) ? value : fallback
-  return Math.min(Math.max(safeValue, 0), 1)
+  return Math.min(Math.max(safeValue, min), max)
 }
-const toPositiveNumber = (value, fallback) => (
-  Number.isFinite(value) && value > 0 ? value : fallback
-)
+
+const clamp01 = (value, fallback = 0) => clampNumber(value, 0, 1, fallback)
 
 const bellHeights = (n, peak, valley) => {
   const heights = []
@@ -60,10 +61,11 @@ const bellHeights = (n, peak, valley) => {
   return heights
 }
 
-const safeBars = computed(() => Math.max(1, Math.round(toPositiveNumber(props.bars, 9))))
-const safePeak = computed(() => toPositiveNumber(props.peak, 0.98))
+const safeBars = computed(() => Math.round(clampNumber(props.bars, 1, 32, 9)))
+const safePeak = computed(() => clampNumber(props.peak, 0, 1, 0.98))
 const safeValley = computed(() => clamp01(props.valley, 0.55))
 const safeMinReveal = computed(() => clamp01(props.minReveal, 0.035))
+const safeBlur = computed(() => clampNumber(props.blur, 0, 40, 15))
 const barHeights = computed(() => bellHeights(safeBars.value, safePeak.value, safeValley.value))
 const columnWidth = computed(() => VBW / safeBars.value)
 
@@ -94,10 +96,18 @@ const stopSpring = () => {
 const stepSpring = () => {
   const stiffness = 0.18
   const damping = 0.72
+  const boundaryEpsilon = 0.001
   const force = (targetProgress - currentProgress) * stiffness
 
   velocity = (velocity + force) * damping
   renderProgress(currentProgress + velocity)
+  if (currentProgress <= boundaryEpsilon && velocity < 0) {
+    velocity = 0
+    renderProgress(0)
+  } else if (currentProgress >= 1 - boundaryEpsilon && velocity > 0) {
+    velocity = 0
+    renderProgress(1)
+  }
 
   if (Math.abs(targetProgress - currentProgress) < 0.001 && Math.abs(velocity) < 0.001) {
     velocity = 0
@@ -117,14 +127,28 @@ const startSpring = () => {
 const measure = () => {
   if (!tailRef.value) return
 
+  if (window.scrollY <= 1) {
+    targetProgress = 0
+    velocity = 0
+    stopSpring()
+    renderProgress(0)
+    return
+  }
+
   const rect = tailRef.value.getBoundingClientRect()
   const tailHeight = Math.max(rect.height, 1)
   const raw = (window.innerHeight - rect.top) / tailHeight
   const visibleProgress = clamp01(raw)
 
-  targetProgress = visibleProgress <= 0
-    ? 0
-    : clamp01(safeMinReveal.value + (1 - safeMinReveal.value) * visibleProgress)
+  if (visibleProgress <= 0) {
+    targetProgress = 0
+    velocity = 0
+    stopSpring()
+    renderProgress(0)
+    return
+  }
+
+  targetProgress = clamp01(safeMinReveal.value + (1 - safeMinReveal.value) * visibleProgress)
 
   if (reducedMotion.value) {
     stopSpring()
@@ -152,12 +176,23 @@ onMounted(() => {
   }
 
   measure()
-  requestAnimationFrame(measure)
+  layoutFrame = requestAnimationFrame(() => {
+    layoutFrame = 0
+    measure()
+  })
+  window.addEventListener('load', measure, { once: true })
   window.addEventListener('scroll', measure, { passive: true })
   window.addEventListener('resize', measure, { passive: true })
+
+  if ('ResizeObserver' in window) {
+    resizeObserver = new ResizeObserver(measure)
+    resizeObserver.observe(document.body)
+    resizeObserver.observe(document.documentElement)
+  }
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('load', measure)
   window.removeEventListener('scroll', measure)
   window.removeEventListener('resize', measure)
 
@@ -170,6 +205,15 @@ onBeforeUnmount(() => {
   }
 
   stopSpring()
+  if (layoutFrame) {
+    cancelAnimationFrame(layoutFrame)
+    layoutFrame = 0
+  }
+
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+    resizeObserver = null
+  }
 })
 </script>
 
@@ -201,7 +245,7 @@ onBeforeUnmount(() => {
             />
           </linearGradient>
           <filter :id="blurId" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur :stdDeviation="blur" />
+            <feGaussianBlur :stdDeviation="safeBlur" />
           </filter>
         </defs>
 
