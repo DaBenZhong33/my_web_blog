@@ -32,29 +32,29 @@ import FooterSpringGlow from './components/FooterSpringGlow.vue'
       </RouterView>
     </main>
 
-    <footer class="footer">
-      <div class="container footer-inner">
-        <div class="footer-brand">
-          <span class="logo-mark" aria-hidden="true">
-            <img src="/brand/dbz-logo.png" alt="" />
-          </span>
-          <div>
-            <p class="footer-name">大笨钟 / DEV</p>
-            <p class="footer-desc">独立开发者 · 做自己的小产品</p>
+    <FooterSpringGlow>
+      <footer class="footer">
+        <div class="container footer-inner">
+          <div class="footer-brand">
+            <span class="logo-mark" aria-hidden="true">
+              <img src="/brand/dbz-logo.png" alt="" />
+            </span>
+            <div>
+              <p class="footer-name">大笨钟 / DEV</p>
+              <p class="footer-desc">独立开发者 · 做自己的小产品</p>
+            </div>
+          </div>
+          <div class="footer-links">
+            <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+            <a href="mailto:hello@example.com">Email</a>
+            <a href="#" target="_blank" rel="noopener">即刻</a>
           </div>
         </div>
-        <div class="footer-links">
-          <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
-          <a href="mailto:hello@example.com">Email</a>
-          <a href="#" target="_blank" rel="noopener">即刻</a>
+        <div class="container footer-copy">
+          © 2026 大笨钟 · Vue 3 + Vite
         </div>
-      </div>
-      <div class="container footer-copy">
-        © 2026 大笨钟 · Vue 3 + Vite
-      </div>
-    </footer>
-
-    <FooterSpringGlow />
+      </footer>
+    </FooterSpringGlow>
 
     <BackToTop />
   </div>
