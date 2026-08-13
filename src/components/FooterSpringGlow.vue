@@ -8,8 +8,8 @@ import {
 } from './footerSpringGlowMotion.js'
 
 const props = defineProps({
+  desktopTailHeight: { type: String, default: '38vh' },
   snapThreshold: { type: Number, default: 0.65 },
-  settleDelay: { type: Number, default: 150 },
   bars: { type: Number, default: 9 },
   blur: { type: Number, default: 15 },
   peak: { type: Number, default: 0.98 },
@@ -31,10 +31,12 @@ const RUIXEN_STOPS = [
 ]
 
 const revealRef = ref(null)
+const desktopTailRef = ref(null)
 const revealHeight = ref(0)
 const progress = ref(0)
 const reducedMotion = ref(false)
 const interactionState = ref('hidden')
+const mobileMode = ref(false)
 
 const uid = `footer-spring-${Math.random().toString(36).slice(2)}`
 const gradientId = `${uid}-gradient`
@@ -45,10 +47,10 @@ let currentProgress = 0
 let velocity = 0
 let animationFrame = 0
 let layoutFrame = 0
-let wheelSettleTimer = 0
 let lastTouchY = null
 let touchActive = false
 let motionQuery = null
+let modeQuery = null
 let resizeObserver = null
 
 const clampNumber = (value, min, max, fallback) => {
@@ -74,7 +76,6 @@ const safePeak = computed(() => clampNumber(props.peak, 0, 1, 0.98))
 const safeValley = computed(() => clamp01(props.valley, 0.55))
 const safeBlur = computed(() => clampNumber(props.blur, 0, 40, 15))
 const safeSnapThreshold = computed(() => clamp01(props.snapThreshold, 0.65))
-const safeSettleDelay = computed(() => clampNumber(props.settleDelay, 80, 400, 150))
 const isExpanded = computed(() => interactionState.value === 'expanded')
 const barModels = computed(() => {
   const heights = bellHeights(safeBars.value, safePeak.value, safeValley.value)
@@ -98,6 +99,7 @@ const rootStyle = computed(() => {
   const revealOffset = revealDistance * safeProgress
 
   return {
+    '--footer-desktop-tail-height': props.desktopTailHeight,
     '--footer-reveal-distance': `${revealDistance.toFixed(2)}px`,
     '--footer-reveal-offset': `${revealOffset.toFixed(2)}px`,
     '--footer-glow-opacity': glowOpacity.toFixed(4)
@@ -134,7 +136,11 @@ const stepSpring = () => {
   if (Math.abs(targetProgress - currentProgress) < 0.001 && Math.abs(velocity) < 0.001) {
     velocity = 0
     renderProgress(targetProgress)
-    interactionState.value = targetProgress === 1 ? 'expanded' : 'hidden'
+    interactionState.value = targetProgress >= 1
+      ? 'expanded'
+      : targetProgress <= 0
+        ? 'hidden'
+        : 'pulling'
     animationFrame = 0
     return
   }
@@ -159,6 +165,17 @@ const getInputTravel = () => {
 
 const updateRevealHeight = () => {
   revealHeight.value = revealRef.value?.getBoundingClientRect().height ?? 0
+}
+
+const resetInteraction = () => {
+  stopSpring()
+  targetProgress = 0
+  currentProgress = 0
+  velocity = 0
+  touchActive = false
+  lastTouchY = null
+  renderProgress(0)
+  interactionState.value = 'hidden'
 }
 
 const settleInteraction = () => {
@@ -190,30 +207,9 @@ const applyInteractionDelta = (delta) => {
   return true
 }
 
-const clearWheelSettleTimer = () => {
-  if (!wheelSettleTimer) return
-  window.clearTimeout(wheelSettleTimer)
-  wheelSettleTimer = 0
-}
-
-const scheduleWheelSettle = () => {
-  clearWheelSettleTimer()
-  wheelSettleTimer = window.setTimeout(() => {
-    wheelSettleTimer = 0
-    settleInteraction()
-  }, safeSettleDelay.value)
-}
-
-const handleWheel = (event) => {
-  const canOpen = event.deltaY > 0 && isAtPageBottom()
-  const canClose = event.deltaY < 0 && currentProgress > 0
-  if (!canOpen && !canClose) return
-
-  if (applyInteractionDelta(event.deltaY)) event.preventDefault()
-  scheduleWheelSettle()
-}
-
 const handleTouchStart = (event) => {
+  if (!mobileMode.value) return
+
   if (event.touches.length !== 1) {
     touchActive = false
     lastTouchY = null
@@ -225,6 +221,7 @@ const handleTouchStart = (event) => {
 }
 
 const handleTouchMove = (event) => {
+  if (!mobileMode.value) return
   if (!touchActive || event.touches.length !== 1 || lastTouchY === null) return
 
   const nextY = event.touches[0].clientY
@@ -237,27 +234,79 @@ const handleTouchMove = (event) => {
 }
 
 const handleTouchEnd = () => {
+  if (!mobileMode.value) return
   if (touchActive) settleInteraction()
   touchActive = false
   lastTouchY = null
 }
 
-const measure = () => {
-  if (!isAtPageBottom()) {
-    targetProgress = 0
-    velocity = 0
+const measureDesktopProgress = () => {
+  if (!desktopTailRef.value) return
+
+  const rect = desktopTailRef.value.getBoundingClientRect()
+  const tailHeight = Math.max(rect.height, 1)
+  const visibleProgress = clamp01((window.innerHeight - rect.top) / tailHeight)
+
+  targetProgress = visibleProgress
+
+  if (reducedMotion.value) {
     stopSpring()
-    renderProgress(0)
-    interactionState.value = 'hidden'
+    velocity = 0
+    renderProgress(targetProgress)
+    interactionState.value = targetProgress >= 1
+      ? 'expanded'
+      : targetProgress <= 0
+        ? 'hidden'
+        : 'pulling'
+    return
   }
+
+  interactionState.value = targetProgress <= 0
+    ? 'hidden'
+    : targetProgress < currentProgress
+      ? 'collapsing'
+      : 'pulling'
+  startSpring()
+}
+
+const measure = () => {
+  if (!mobileMode.value) {
+    measureDesktopProgress()
+    return
+  }
+
+  if (!isAtPageBottom()) resetInteraction()
 }
 
 const handleMotionPreference = () => {
   reducedMotion.value = motionQuery.matches
-  if (reducedMotion.value) settleInteraction()
+  if (mobileMode.value && reducedMotion.value) {
+    settleInteraction()
+  } else {
+    measure()
+  }
+}
+
+const handleModeChange = () => {
+  const nextMobileMode = modeQuery.matches
+  if (nextMobileMode === mobileMode.value) return
+
+  mobileMode.value = nextMobileMode
+  resetInteraction()
+  updateRevealHeight()
+  requestAnimationFrame(measure)
 }
 
 onMounted(() => {
+  modeQuery = window.matchMedia('(max-width: 720px)')
+  mobileMode.value = modeQuery.matches
+
+  if (modeQuery.addEventListener) {
+    modeQuery.addEventListener('change', handleModeChange)
+  } else {
+    modeQuery.addListener(handleModeChange)
+  }
+
   motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   reducedMotion.value = motionQuery.matches
 
@@ -277,7 +326,6 @@ onMounted(() => {
   window.addEventListener('load', measure, { once: true })
   window.addEventListener('scroll', measure, { passive: true })
   window.addEventListener('resize', measure, { passive: true })
-  window.addEventListener('wheel', handleWheel, { passive: false })
   window.addEventListener('touchstart', handleTouchStart, { passive: true })
   window.addEventListener('touchmove', handleTouchMove, { passive: false })
   window.addEventListener('touchend', handleTouchEnd, { passive: true })
@@ -296,12 +344,18 @@ onBeforeUnmount(() => {
   window.removeEventListener('load', measure)
   window.removeEventListener('scroll', measure)
   window.removeEventListener('resize', measure)
-  window.removeEventListener('wheel', handleWheel)
   window.removeEventListener('touchstart', handleTouchStart)
   window.removeEventListener('touchmove', handleTouchMove)
   window.removeEventListener('touchend', handleTouchEnd)
   window.removeEventListener('touchcancel', handleTouchEnd)
-  clearWheelSettleTimer()
+
+  if (modeQuery) {
+    if (modeQuery.removeEventListener) {
+      modeQuery.removeEventListener('change', handleModeChange)
+    } else {
+      modeQuery.removeListener(handleModeChange)
+    }
+  }
 
   if (motionQuery) {
     if (motionQuery.removeEventListener) {
@@ -338,6 +392,8 @@ onBeforeUnmount(() => {
     <div class="footer-spring-glow__content">
       <slot />
     </div>
+
+    <div ref="desktopTailRef" class="footer-spring-glow__desktop-tail"></div>
 
     <div
       ref="revealRef"
@@ -396,8 +452,13 @@ onBeforeUnmount(() => {
 .footer-spring-glow__content {
   position: relative;
   z-index: 3;
-  transform: translate3d(0, calc(-1 * var(--footer-reveal-offset)), 0);
-  will-change: transform;
+  transform: none;
+}
+
+.footer-spring-glow__desktop-tail {
+  position: relative;
+  min-height: var(--footer-desktop-tail-height);
+  background: #050505;
 }
 
 .footer-spring-glow__reveal {
@@ -442,6 +503,15 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 720px) {
+  .footer-spring-glow__content {
+    transform: translate3d(0, calc(-1 * var(--footer-reveal-offset)), 0);
+    will-change: transform;
+  }
+
+  .footer-spring-glow__desktop-tail {
+    display: none;
+  }
+
   .footer-spring-glow__reveal {
     height: min(46vh, 360px);
     background-size: 220px 100%, 100% 180px;
@@ -449,6 +519,12 @@ onBeforeUnmount(() => {
 
   .footer-spring-glow__svg {
     opacity: calc(var(--footer-glow-opacity) * 0.76);
+  }
+}
+
+@media (min-width: 721px) {
+  .footer-spring-glow__desktop-tail {
+    min-height: var(--footer-desktop-tail-height);
   }
 }
 
