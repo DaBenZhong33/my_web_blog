@@ -313,6 +313,7 @@ for (const pattern of [
   /addEventListener\('wheel', handleWheel, \{ passive: false \}\)/,
   /addEventListener\('touchmove', handleTouchMove, \{ passive: false \}\)/,
   /removeEventListener\('touchcancel', handleTouchEnd\)/,
+  /const measure = \(\) => \{\s*if \(!isAtPageBottom\(\)\) \{[\s\S]*interactionState\.value = 'hidden'/,
   /createBreathProfile/,
   /prefers-reduced-motion/,
   /aria-hidden="true"/,
@@ -332,7 +333,8 @@ for (const pattern of [
 
 for (const pattern of [
   /const raw = \(window\.innerHeight - rect\.top\) \/ tailHeight/,
-  /targetProgress = clamp01\(safeMinReveal\.value/
+  /targetProgress = clamp01\(safeMinReveal\.value/,
+  /'is-expanded': isExpanded/
 ]) {
   rejectPattern(files.footerSpringGlow, footerSpringGlow, pattern)
 }

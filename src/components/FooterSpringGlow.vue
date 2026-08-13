@@ -243,11 +243,12 @@ const handleTouchEnd = () => {
 }
 
 const measure = () => {
-  if (!isAtPageBottom() && interactionState.value === 'hidden') {
+  if (!isAtPageBottom()) {
     targetProgress = 0
     velocity = 0
     stopSpring()
     renderProgress(0)
+    interactionState.value = 'hidden'
   }
 }
 
@@ -326,7 +327,6 @@ onBeforeUnmount(() => {
     :class="[
       `is-${interactionState}`,
       {
-        'is-expanded': isExpanded,
         'is-reduced-motion': reducedMotion
       }
     ]"
