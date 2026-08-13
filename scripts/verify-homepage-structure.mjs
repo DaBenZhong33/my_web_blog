@@ -299,6 +299,9 @@ for (const pattern of [
   /defineProps/,
   /tailHeight: \{ type: String, default: '38vh' \}/,
   /mobileTailHeight: \{ type: String, default: '30vh' \}/,
+  /snapThreshold: \{ type: Number, default: 0\.65 \}/,
+  /settleDelay: \{ type: Number, default: 150 \}/,
+  /interactionState = ref\('hidden'\)/,
   /const RUIXEN_STOPS = \[/,
   /const bellHeights = \(n, peak, valley\) =>/,
   /requestAnimationFrame/,
@@ -307,6 +310,9 @@ for (const pattern of [
   /removeEventListener\('scroll'/,
   /addEventListener\('resize'/,
   /removeEventListener\('resize'/,
+  /addEventListener\('wheel', handleWheel, \{ passive: false \}\)/,
+  /addEventListener\('touchmove', handleTouchMove, \{ passive: false \}\)/,
+  /removeEventListener\('touchcancel', handleTouchEnd\)/,
   /prefers-reduced-motion/,
   /aria-hidden="true"/,
   /<svg\b/,
@@ -319,6 +325,13 @@ for (const pattern of [
   /@media \(prefers-reduced-motion: reduce\)/
 ]) {
   expectPattern(files.footerSpringGlow, footerSpringGlow, pattern)
+}
+
+for (const pattern of [
+  /const raw = \(window\.innerHeight - rect\.top\) \/ tailHeight/,
+  /targetProgress = clamp01\(safeMinReveal\.value/
+]) {
+  rejectPattern(files.footerSpringGlow, footerSpringGlow, pattern)
 }
 
 expectPattern(files.packageJson, packageJson, /"three":/)

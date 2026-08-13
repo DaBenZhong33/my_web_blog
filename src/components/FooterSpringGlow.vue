@@ -1,10 +1,17 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import {
+  applyInputDelta,
+  clamp01,
+  decideSnapTarget
+} from './footerSpringGlowMotion.js'
 
 const props = defineProps({
   tailHeight: { type: String, default: '38vh' },
   mobileTailHeight: { type: String, default: '30vh' },
   minReveal: { type: Number, default: 0.035 },
+  snapThreshold: { type: Number, default: 0.65 },
+  settleDelay: { type: Number, default: 150 },
   bars: { type: Number, default: 9 },
   blur: { type: Number, default: 15 },
   peak: { type: Number, default: 0.98 },
@@ -28,6 +35,7 @@ const RUIXEN_STOPS = [
 const tailRef = ref(null)
 const progress = ref(0)
 const reducedMotion = ref(false)
+const interactionState = ref('hidden')
 
 const uid = `footer-spring-${Math.random().toString(36).slice(2)}`
 const gradientId = `${uid}-gradient`
@@ -38,6 +46,9 @@ let currentProgress = 0
 let velocity = 0
 let animationFrame = 0
 let layoutFrame = 0
+let wheelSettleTimer = 0
+let lastTouchY = null
+let touchActive = false
 let motionQuery = null
 let resizeObserver = null
 
@@ -45,8 +56,6 @@ const clampNumber = (value, min, max, fallback) => {
   const safeValue = Number.isFinite(value) ? value : fallback
   return Math.min(Math.max(safeValue, min), max)
 }
-
-const clamp01 = (value, fallback = 0) => clampNumber(value, 0, 1, fallback)
 
 const bellHeights = (n, peak, valley) => {
   const heights = []
@@ -66,6 +75,9 @@ const safePeak = computed(() => clampNumber(props.peak, 0, 1, 0.98))
 const safeValley = computed(() => clamp01(props.valley, 0.55))
 const safeMinReveal = computed(() => clamp01(props.minReveal, 0.035))
 const safeBlur = computed(() => clampNumber(props.blur, 0, 40, 15))
+const safeSnapThreshold = computed(() => clamp01(props.snapThreshold, 0.65))
+const safeSettleDelay = computed(() => clampNumber(props.settleDelay, 80, 400, 150))
+const isExpanded = computed(() => interactionState.value === 'expanded')
 const barHeights = computed(() => bellHeights(safeBars.value, safePeak.value, safeValley.value))
 const columnWidth = computed(() => VBW / safeBars.value)
 
@@ -112,6 +124,7 @@ const stepSpring = () => {
   if (Math.abs(targetProgress - currentProgress) < 0.001 && Math.abs(velocity) < 0.001) {
     velocity = 0
     renderProgress(targetProgress)
+    interactionState.value = targetProgress === 1 ? 'expanded' : 'hidden'
     animationFrame = 0
     return
   }
@@ -124,45 +137,110 @@ const startSpring = () => {
   animationFrame = requestAnimationFrame(stepSpring)
 }
 
-const measure = () => {
-  if (!tailRef.value) return
+const isAtPageBottom = () => {
+  const root = document.documentElement
+  const remaining = root.scrollHeight - window.innerHeight - window.scrollY
+  return remaining <= 2
+}
 
-  if (window.scrollY <= 1) {
-    targetProgress = 0
-    velocity = 0
-    stopSpring()
-    renderProgress(0)
-    return
-  }
+const getInputTravel = () => {
+  const tailHeight = tailRef.value?.getBoundingClientRect().height ?? 0
+  return Math.max(tailHeight, window.innerHeight * 0.3, 1)
+}
 
-  const rect = tailRef.value.getBoundingClientRect()
-  const tailHeight = Math.max(rect.height, 1)
-  const raw = (window.innerHeight - rect.top) / tailHeight
-  const visibleProgress = clamp01(raw)
-
-  if (visibleProgress <= 0) {
-    targetProgress = 0
-    velocity = 0
-    stopSpring()
-    renderProgress(0)
-    return
-  }
-
-  targetProgress = clamp01(safeMinReveal.value + (1 - safeMinReveal.value) * visibleProgress)
+const settleInteraction = () => {
+  const nextTarget = decideSnapTarget(currentProgress, safeSnapThreshold.value)
+  targetProgress = nextTarget
+  interactionState.value = nextTarget === 1 ? 'pulling' : 'collapsing'
 
   if (reducedMotion.value) {
     stopSpring()
     velocity = 0
-    renderProgress(targetProgress)
+    renderProgress(nextTarget)
+    interactionState.value = nextTarget === 1 ? 'expanded' : 'hidden'
     return
   }
 
   startSpring()
 }
 
+const applyInteractionDelta = (delta) => {
+  const previousProgress = currentProgress
+  const nextProgress = applyInputDelta(previousProgress, delta, getInputTravel())
+  if (nextProgress === previousProgress) return false
+
+  stopSpring()
+  velocity = 0
+  targetProgress = nextProgress
+  renderProgress(nextProgress)
+  interactionState.value = nextProgress > previousProgress ? 'pulling' : 'collapsing'
+  return true
+}
+
+const clearWheelSettleTimer = () => {
+  if (!wheelSettleTimer) return
+  window.clearTimeout(wheelSettleTimer)
+  wheelSettleTimer = 0
+}
+
+const scheduleWheelSettle = () => {
+  clearWheelSettleTimer()
+  wheelSettleTimer = window.setTimeout(() => {
+    wheelSettleTimer = 0
+    settleInteraction()
+  }, safeSettleDelay.value)
+}
+
+const handleWheel = (event) => {
+  const canOpen = event.deltaY > 0 && isAtPageBottom()
+  const canClose = event.deltaY < 0 && currentProgress > 0
+  if (!canOpen && !canClose) return
+
+  if (applyInteractionDelta(event.deltaY)) event.preventDefault()
+  scheduleWheelSettle()
+}
+
+const handleTouchStart = (event) => {
+  if (event.touches.length !== 1) {
+    touchActive = false
+    lastTouchY = null
+    return
+  }
+
+  touchActive = isAtPageBottom() || currentProgress > 0
+  lastTouchY = touchActive ? event.touches[0].clientY : null
+}
+
+const handleTouchMove = (event) => {
+  if (!touchActive || event.touches.length !== 1 || lastTouchY === null) return
+
+  const nextY = event.touches[0].clientY
+  const delta = lastTouchY - nextY
+  lastTouchY = nextY
+
+  const canOpen = delta > 0 && isAtPageBottom()
+  const canClose = delta < 0 && currentProgress > 0
+  if ((canOpen || canClose) && applyInteractionDelta(delta)) event.preventDefault()
+}
+
+const handleTouchEnd = () => {
+  if (touchActive) settleInteraction()
+  touchActive = false
+  lastTouchY = null
+}
+
+const measure = () => {
+  if (!isAtPageBottom() && interactionState.value === 'hidden') {
+    targetProgress = 0
+    velocity = 0
+    stopSpring()
+    renderProgress(0)
+  }
+}
+
 const handleMotionPreference = () => {
   reducedMotion.value = motionQuery.matches
-  measure()
+  if (reducedMotion.value) settleInteraction()
 }
 
 onMounted(() => {
@@ -183,6 +261,11 @@ onMounted(() => {
   window.addEventListener('load', measure, { once: true })
   window.addEventListener('scroll', measure, { passive: true })
   window.addEventListener('resize', measure, { passive: true })
+  window.addEventListener('wheel', handleWheel, { passive: false })
+  window.addEventListener('touchstart', handleTouchStart, { passive: true })
+  window.addEventListener('touchmove', handleTouchMove, { passive: false })
+  window.addEventListener('touchend', handleTouchEnd, { passive: true })
+  window.addEventListener('touchcancel', handleTouchEnd, { passive: true })
 
   if ('ResizeObserver' in window) {
     resizeObserver = new ResizeObserver(measure)
@@ -195,6 +278,12 @@ onBeforeUnmount(() => {
   window.removeEventListener('load', measure)
   window.removeEventListener('scroll', measure)
   window.removeEventListener('resize', measure)
+  window.removeEventListener('wheel', handleWheel)
+  window.removeEventListener('touchstart', handleTouchStart)
+  window.removeEventListener('touchmove', handleTouchMove)
+  window.removeEventListener('touchend', handleTouchEnd)
+  window.removeEventListener('touchcancel', handleTouchEnd)
+  clearWheelSettleTimer()
 
   if (motionQuery) {
     if (motionQuery.removeEventListener) {
@@ -221,7 +310,13 @@ onBeforeUnmount(() => {
   <div
     ref="tailRef"
     class="footer-spring-glow"
-    :class="{ 'is-reduced-motion': reducedMotion }"
+    :class="[
+      `is-${interactionState}`,
+      {
+        'is-expanded': isExpanded,
+        'is-reduced-motion': reducedMotion
+      }
+    ]"
     :style="rootStyle"
     aria-hidden="true"
   >
