@@ -156,7 +156,10 @@ for (const pattern of [
   /\.zel-hero\s*\{[^}]*z-index:\s*3/,
   /\.zel-hero::before[\s\S]*z-index:\s*1/,
   /\.hero-shell[\s\S]*z-index:\s*2/,
-  /\.hero-cube\s*\{[^}]*right:\s*-22px/,
+  /\.hero-cube\s*\{[^}]*right:\s*0/,
+  /\.hero-cube\s*\{[^}]*bottom:\s*-28px/,
+  /width:\s*min\(680px,\s*52vw\)/,
+  /@media \(max-width: 720px\)[\s\S]*width:\s*min\(390px,\s*98vw\)/,
   /\.project-section\s*\{[^}]*overflow:\s*hidden/
 ]) {
   expectPattern(files.home, home, pattern)
@@ -315,6 +318,8 @@ for (const pattern of [
   /@pointermove="handlePointerMove"/,
   /pointerTiltX/,
   /spinRotation/,
+  /linear-gradient\(145deg, #aeb6ae, #434a45 42%, #111513 78%, #737b74\)/,
+  /box-shadow:[\s\S]*rgba\(214, 255, 0, 0\.46\)/,
   /unfoldedCameraZ/,
   /camera\.position\.z = THREE\.MathUtils\.lerp\(settings\.cameraZ, settings\.unfoldedCameraZ, unfoldProgress\)/,
   /triggerTouchUnfold/,

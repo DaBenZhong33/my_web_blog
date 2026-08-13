@@ -634,13 +634,13 @@ onBeforeUnmount(disposeThreeScene)
   position: absolute;
   width: min(220px, 44vw);
   aspect-ratio: 1;
-  border: 1px solid rgba(255, 255, 255, 0.32);
+  border: 1px solid rgba(232, 238, 232, 0.2);
   background:
-    repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 8px),
-    linear-gradient(135deg, #f4f4ee, #858d89 30%, #171a1a 68%, #d9ddd6);
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 6px),
+    linear-gradient(145deg, #aeb6ae, #434a45 42%, #111513 78%, #737b74);
   box-shadow:
-    inset 0 0 24px rgba(255, 255, 255, 0.16),
-    0 26px 60px rgba(0, 0, 0, 0.48);
+    inset 0 0 28px rgba(255, 255, 255, 0.08),
+    0 30px 64px rgba(0, 0, 0, 0.56);
   transform-style: preserve-3d;
 }
 
@@ -664,7 +664,9 @@ onBeforeUnmount(disposeThreeScene)
   height: 14px;
   border-radius: 50%;
   background: #d6ff00;
-  box-shadow: 0 0 34px rgba(214, 255, 0, 0.72);
+  box-shadow:
+    0 0 18px rgba(214, 255, 0, 0.46),
+    0 0 42px rgba(214, 255, 0, 0.22);
 }
 
 @media (max-width: 720px) {
