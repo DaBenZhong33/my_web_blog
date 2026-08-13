@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 const root = process.cwd()
 
 const files = {
+  app: 'src/App.vue',
   home: 'src/views/HomeView.vue',
   rail: 'src/components/SectionRail.vue',
   preview: 'src/components/ProjectPreviewCard.vue',
@@ -11,6 +12,7 @@ const files = {
   heroCube: 'src/components/HeroMetalCube.vue',
   canvasText: 'src/components/CanvasText.vue',
   liquidMetalBackdrop: 'src/components/LiquidMetalBackdrop.vue',
+  footerSpringGlow: 'src/components/FooterSpringGlow.vue',
   packageJson: 'package.json'
 }
 
@@ -41,10 +43,22 @@ const heroCube = readUtf8(files.heroCube)
 const canvasText = readUtf8(files.canvasText)
 const liquidMetalBackdrop = readUtf8(files.liquidMetalBackdrop)
 const packageJson = readUtf8(files.packageJson)
+const app = readUtf8(files.app)
+const footerSpringGlow = readUtf8(files.footerSpringGlow)
 
 const garbledPattern = /[\uFFFD\u951F\u00C3\u00C2]/
 
-for (const [label, content] of Object.entries({ home, rail, preview, style, heroCube, canvasText, liquidMetalBackdrop })) {
+for (const [label, content] of Object.entries({
+  app,
+  home,
+  rail,
+  preview,
+  style,
+  heroCube,
+  canvasText,
+  liquidMetalBackdrop,
+  footerSpringGlow
+})) {
   if (garbledPattern.test(content)) failures.push(`${label} contains garbled text marker`)
 }
 
@@ -88,6 +102,16 @@ for (const pattern of [
   /min-height:\s*690px/
 ]) {
   expectPattern(files.home, home, pattern)
+}
+
+for (const pattern of [
+  /import FooterSpringGlow from '\.\/components\/FooterSpringGlow\.vue'/,
+  /<footer class="footer">[\s\S]*<\/footer>\s*<FooterSpringGlow\s*\/>/,
+  /<p class="footer-name">大笨钟 \/ DEV<\/p>/,
+  /<a href="mailto:hello@example.com">Email<\/a>/,
+  /<BackToTop\s*\/>/
+]) {
+  expectPattern(files.app, app, pattern)
 }
 
 for (const pattern of [
@@ -269,6 +293,32 @@ for (const pattern of [
   /pointer-events:\s*none/
 ]) {
   expectPattern(files.liquidMetalBackdrop, liquidMetalBackdrop, pattern)
+}
+
+for (const pattern of [
+  /defineProps/,
+  /tailHeight: \{ type: String, default: '38vh' \}/,
+  /mobileTailHeight: \{ type: String, default: '30vh' \}/,
+  /const RUIXEN_STOPS = \[/,
+  /const bellHeights = \(n, peak, valley\) =>/,
+  /requestAnimationFrame/,
+  /cancelAnimationFrame/,
+  /addEventListener\('scroll'/,
+  /removeEventListener\('scroll'/,
+  /addEventListener\('resize'/,
+  /removeEventListener\('resize'/,
+  /prefers-reduced-motion/,
+  /aria-hidden="true"/,
+  /<svg\b/,
+  /<linearGradient\b/,
+  /<rect\b/,
+  /v-for="(?:stop|\([a-zA-Z]+,\s*[a-zA-Z]+\)) in RUIXEN_STOPS"/,
+  /footer-spring-glow__band/,
+  /footer-spring-glow__floor/,
+  /pointer-events:\s*none/,
+  /@media \(prefers-reduced-motion: reduce\)/
+]) {
+  expectPattern(files.footerSpringGlow, footerSpringGlow, pattern)
 }
 
 expectPattern(files.packageJson, packageJson, /"three":/)
