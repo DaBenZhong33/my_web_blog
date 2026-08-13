@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "verify:footer-glow": "node scripts/verify-footer-spring-glow-motion.mjs",
     "verify:homepage": "node scripts/verify-homepage-structure.mjs",
     "preview": "vite preview"
   },
