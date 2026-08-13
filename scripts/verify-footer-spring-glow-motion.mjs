@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import {
   applyInputDelta,
   clamp01,
@@ -24,7 +25,7 @@ const firstProfile = createBreathProfile(0)
 const repeatedProfile = createBreathProfile(0)
 assert.deepEqual(firstProfile, repeatedProfile)
 
-for (let index = 0; index < 9; index += 1) {
+for (let index = 0; index < 18; index += 1) {
   const profile = createBreathProfile(index)
   assert.ok(profile.scale >= 1.02 && profile.scale <= 1.07)
   assert.ok(profile.duration >= 2.8 && profile.duration <= 5.2)
@@ -32,5 +33,14 @@ for (let index = 0; index < 9; index += 1) {
 }
 
 assert.notDeepEqual(createBreathProfile(0), createBreathProfile(1))
+
+const footerComponent = readFileSync(
+  new URL('../src/components/FooterSpringGlow.vue', import.meta.url),
+  'utf8'
+)
+
+assert.match(footerComponent, /bars:\s*\{\s*type:\s*Number,\s*default:\s*18\s*\}/)
+assert.match(footerComponent, /clampNumber\(props\.bars,\s*1,\s*64,\s*18\)/)
+assert.match(footerComponent, /:width="columnWidth \* 1\.08"/)
 
 console.log('Footer spring glow motion verification passed.')

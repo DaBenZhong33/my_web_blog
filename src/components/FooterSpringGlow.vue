@@ -10,7 +10,7 @@ import {
 const props = defineProps({
   desktopTailHeight: { type: String, default: '38vh' },
   snapThreshold: { type: Number, default: 0.65 },
-  bars: { type: Number, default: 9 },
+  bars: { type: Number, default: 18 },
   blur: { type: Number, default: 15 },
   peak: { type: Number, default: 0.98 },
   valley: { type: Number, default: 0.55 }
@@ -71,7 +71,7 @@ const bellHeights = (n, peak, valley) => {
   return heights
 }
 
-const safeBars = computed(() => Math.round(clampNumber(props.bars, 1, 32, 9)))
+const safeBars = computed(() => Math.round(clampNumber(props.bars, 1, 64, 18)))
 const safePeak = computed(() => clampNumber(props.peak, 0, 1, 0.98))
 const safeValley = computed(() => clamp01(props.valley, 0.55))
 const safeBlur = computed(() => clampNumber(props.blur, 0, 40, 15))
@@ -433,7 +433,7 @@ onBeforeUnmount(() => {
           <rect
             :x="index * columnWidth"
             :y="VBH - bar.height"
-            :width="columnWidth * 1.23"
+            :width="columnWidth * 1.08"
             :height="bar.height"
             :fill="`url(#${gradientId})`"
           />
