@@ -390,7 +390,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .footer-spring-glow {
   position: relative;
-  z-index: 1;
+  z-index: 40;
 }
 
 .footer-spring-glow__content {
@@ -402,6 +402,7 @@ onBeforeUnmount(() => {
 
 .footer-spring-glow__reveal {
   position: fixed;
+  isolation: isolate;
   left: 0;
   right: 0;
   bottom: 0;
@@ -409,10 +410,8 @@ onBeforeUnmount(() => {
   height: min(58vh, 520px);
   overflow: hidden;
   pointer-events: none;
-  opacity: var(--footer-glow-opacity);
   transform: translate3d(0, calc(100% - var(--footer-reveal-offset)), 0);
   will-change: transform, opacity;
-  mix-blend-mode: screen;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
     linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
@@ -424,6 +423,7 @@ onBeforeUnmount(() => {
   display: block;
   width: 100%;
   height: 100%;
+  opacity: var(--footer-glow-opacity);
 }
 
 .footer-spring-glow__bar {
@@ -444,8 +444,11 @@ onBeforeUnmount(() => {
 @media (max-width: 720px) {
   .footer-spring-glow__reveal {
     height: min(46vh, 360px);
-    opacity: calc(var(--footer-glow-opacity) * 0.76);
     background-size: 220px 100%, 100% 180px;
+  }
+
+  .footer-spring-glow__svg {
+    opacity: calc(var(--footer-glow-opacity) * 0.76);
   }
 }
 

@@ -322,6 +322,9 @@ for (const pattern of [
   /<div class="footer-spring-glow__content">\s*<slot\s*\/>\s*<\/div>/,
   /ref="revealRef"/,
   /footer-spring-glow__reveal/,
+  /\.footer-spring-glow\s*\{[^}]*z-index:\s*40/,
+  /\.footer-spring-glow__reveal\s*\{[^}]*isolation:\s*isolate/,
+  /\.footer-spring-glow__svg\s*\{[^}]*opacity:\s*var\(--footer-glow-opacity\)/,
   /--footer-reveal-distance/,
   /--footer-reveal-offset/,
   /translate3d\(0, calc\(-1 \* var\(--footer-reveal-offset\)\), 0\)/,
@@ -342,7 +345,9 @@ for (const pattern of [
   /mobileTailHeight: \{ type: String/,
   /minReveal: \{ type: Number/,
   /min-height:\s*var\(--footer-tail-height\)/,
-  /footer-spring-glow__floor/
+  /footer-spring-glow__floor/,
+  /mix-blend-mode:\s*screen/,
+  /\.footer-spring-glow__reveal\s*\{[^}]*opacity:\s*var\(--footer-glow-opacity\)/
 ]) {
   rejectPattern(files.footerSpringGlow, footerSpringGlow, pattern)
 }
