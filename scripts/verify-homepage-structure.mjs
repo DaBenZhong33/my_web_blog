@@ -109,7 +109,7 @@ for (const pattern of [
 
 for (const pattern of [
   /import FooterSpringGlow from '\.\/components\/FooterSpringGlow\.vue'/,
-  /<footer class="footer">[\s\S]*<\/footer>\s*<FooterSpringGlow\s*\/>/,
+  /<FooterSpringGlow>\s*<footer class="footer">[\s\S]*<\/footer>\s*<\/FooterSpringGlow>/,
   /<p class="footer-name">大笨钟 \/ DEV<\/p>/,
   /<a href="mailto:li2814054665@163\.com">Email<\/a>/,
   /href="https:\/\/github\.com\/DaBenZhong33"/,
@@ -331,8 +331,13 @@ for (const pattern of [
 
 for (const pattern of [
   /defineProps/,
-  /tailHeight: \{ type: String, default: '38vh' \}/,
-  /mobileTailHeight: \{ type: String, default: '30vh' \}/,
+  /snapThreshold: \{ type: Number, default: 0\.65 \}/,
+  /desktopTailHeight: \{ type: String, default: '38vh' \}/,
+  /interactionState = ref\('hidden'\)/,
+  /const mobileMode = ref\(false\)/,
+  /matchMedia\('\(max-width: 720px\)'\)/,
+  /const resetInteraction = \(\) =>/,
+  /const measureDesktopProgress = \(\) =>/,
   /const RUIXEN_STOPS = \[/,
   /const bellHeights = \(n, peak, valley\) =>/,
   /requestAnimationFrame/,
@@ -341,18 +346,56 @@ for (const pattern of [
   /removeEventListener\('scroll'/,
   /addEventListener\('resize'/,
   /removeEventListener\('resize'/,
+  /addEventListener\('touchmove', handleTouchMove, \{ passive: false \}\)/,
+  /removeEventListener\('touchcancel', handleTouchEnd\)/,
+  /createBreathProfile/,
   /prefers-reduced-motion/,
   /aria-hidden="true"/,
   /<svg\b/,
   /<linearGradient\b/,
   /<rect\b/,
   /v-for="(?:stop|\([a-zA-Z]+,\s*[a-zA-Z]+\)) in RUIXEN_STOPS"/,
-  /footer-spring-glow__band/,
-  /footer-spring-glow__floor/,
+  /<div class="footer-spring-glow__content">\s*<slot\s*\/>\s*<\/div>/,
+  /ref="revealRef"/,
+  /ref="desktopTailRef"/,
+  /footer-spring-glow__desktop-tail/,
+  /footer-spring-glow__reveal/,
+  /\.footer-spring-glow\s*\{[^}]*z-index:\s*40/,
+  /\.footer-spring-glow__reveal\s*\{[^}]*isolation:\s*isolate/,
+  /\.footer-spring-glow__svg\s*\{[^}]*opacity:\s*var\(--footer-glow-opacity\)/,
+  /--footer-reveal-distance/,
+  /--footer-reveal-offset/,
+  /--footer-desktop-tail-height/,
+  /\.footer-spring-glow__content\s*\{[^}]*transform:\s*none/,
+  /@media \(max-width: 720px\)[\s\S]*translate3d\(0, calc\(-1 \* var\(--footer-reveal-offset\)\), 0\)/,
+  /translate3d\(0, calc\(100% - var\(--footer-reveal-offset\)\), 0\)/,
+  /@media \(min-width: 721px\)/,
+  /@media \(max-width: 720px\)[\s\S]*footer-spring-glow__desktop-tail[\s\S]*display:\s*none/,
+  /footer-spring-glow__bar/,
+  /@keyframes footerBarBreathe/,
   /pointer-events:\s*none/,
   /@media \(prefers-reduced-motion: reduce\)/
 ]) {
   expectPattern(files.footerSpringGlow, footerSpringGlow, pattern)
+}
+
+for (const pattern of [
+  /const raw = \(window\.innerHeight - rect\.top\) \/ tailHeight/,
+  /targetProgress = clamp01\(safeMinReveal\.value/,
+  /'is-expanded': isExpanded/,
+  /tailHeight: \{ type: String/,
+  /mobileTailHeight: \{ type: String/,
+  /minReveal: \{ type: Number/,
+  /min-height:\s*var\(--footer-tail-height\)/,
+  /footer-spring-glow__floor/,
+  /mix-blend-mode:\s*screen/,
+  /\.footer-spring-glow__reveal\s*\{[^}]*opacity:\s*var\(--footer-glow-opacity\)/,
+  /addEventListener\('wheel'/,
+  /handleWheel/,
+  /wheelSettleTimer/,
+  /settleDelay: \{ type: Number/
+]) {
+  rejectPattern(files.footerSpringGlow, footerSpringGlow, pattern)
 }
 
 expectPattern(files.packageJson, packageJson, /"three":/)

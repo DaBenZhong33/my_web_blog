@@ -1,11 +1,16 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import {
+  applyInputDelta,
+  clamp01,
+  createBreathProfile,
+  decideSnapTarget
+} from './footerSpringGlowMotion.js'
 
 const props = defineProps({
-  tailHeight: { type: String, default: '38vh' },
-  mobileTailHeight: { type: String, default: '30vh' },
-  minReveal: { type: Number, default: 0.035 },
-  bars: { type: Number, default: 9 },
+  desktopTailHeight: { type: String, default: '38vh' },
+  snapThreshold: { type: Number, default: 0.65 },
+  bars: { type: Number, default: 12 },
   blur: { type: Number, default: 15 },
   peak: { type: Number, default: 0.98 },
   valley: { type: Number, default: 0.55 }
@@ -25,9 +30,13 @@ const RUIXEN_STOPS = [
   { offset: 1, color: '#D7FF0000' }
 ]
 
-const tailRef = ref(null)
+const revealRef = ref(null)
+const desktopTailRef = ref(null)
+const revealHeight = ref(0)
 const progress = ref(0)
 const reducedMotion = ref(false)
+const interactionState = ref('hidden')
+const mobileMode = ref(false)
 
 const uid = `footer-spring-${Math.random().toString(36).slice(2)}`
 const gradientId = `${uid}-gradient`
@@ -38,15 +47,16 @@ let currentProgress = 0
 let velocity = 0
 let animationFrame = 0
 let layoutFrame = 0
+let lastTouchY = null
+let touchActive = false
 let motionQuery = null
+let modeQuery = null
 let resizeObserver = null
 
 const clampNumber = (value, min, max, fallback) => {
   const safeValue = Number.isFinite(value) ? value : fallback
   return Math.min(Math.max(safeValue, min), max)
 }
-
-const clamp01 = (value, fallback = 0) => clampNumber(value, 0, 1, fallback)
 
 const bellHeights = (n, peak, valley) => {
   const heights = []
@@ -61,24 +71,38 @@ const bellHeights = (n, peak, valley) => {
   return heights
 }
 
-const safeBars = computed(() => Math.round(clampNumber(props.bars, 1, 32, 9)))
+const safeBars = computed(() => Math.round(clampNumber(props.bars, 1, 64, 12)))
 const safePeak = computed(() => clampNumber(props.peak, 0, 1, 0.98))
 const safeValley = computed(() => clamp01(props.valley, 0.55))
-const safeMinReveal = computed(() => clamp01(props.minReveal, 0.035))
 const safeBlur = computed(() => clampNumber(props.blur, 0, 40, 15))
-const barHeights = computed(() => bellHeights(safeBars.value, safePeak.value, safeValley.value))
+const safeSnapThreshold = computed(() => clamp01(props.snapThreshold, 0.65))
+const isExpanded = computed(() => interactionState.value === 'expanded')
+const barModels = computed(() => {
+  const heights = bellHeights(safeBars.value, safePeak.value, safeValley.value)
+  return heights.map((height, index) => ({
+    height,
+    breath: createBreathProfile(index)
+  }))
+})
 const columnWidth = computed(() => VBW / safeBars.value)
+
+const barStyle = (breath) => ({
+  '--bar-breath-scale': breath.scale,
+  '--bar-breath-duration': `${breath.duration}s`,
+  '--bar-breath-delay': `${breath.delay}s`
+})
 
 const rootStyle = computed(() => {
   const safeProgress = clamp01(progress.value)
   const glowOpacity = safeProgress <= 0 ? 0 : Math.min(0.96, 0.08 + safeProgress * 0.88)
+  const revealDistance = revealHeight.value
+  const revealOffset = revealDistance * safeProgress
 
   return {
-    '--footer-tail-height': props.tailHeight,
-    '--footer-tail-height-mobile': props.mobileTailHeight,
-    '--footer-glow-progress': safeProgress.toFixed(4),
-    '--footer-glow-opacity': glowOpacity.toFixed(4),
-    '--footer-glow-lift': `${((1 - safeProgress) * 18).toFixed(2)}px`
+    '--footer-desktop-tail-height': props.desktopTailHeight,
+    '--footer-reveal-distance': `${revealDistance.toFixed(2)}px`,
+    '--footer-reveal-offset': `${revealOffset.toFixed(2)}px`,
+    '--footer-glow-opacity': glowOpacity.toFixed(4)
   }
 })
 
@@ -112,6 +136,11 @@ const stepSpring = () => {
   if (Math.abs(targetProgress - currentProgress) < 0.001 && Math.abs(velocity) < 0.001) {
     velocity = 0
     renderProgress(targetProgress)
+    interactionState.value = targetProgress >= 1
+      ? 'expanded'
+      : targetProgress <= 0
+        ? 'hidden'
+        : 'pulling'
     animationFrame = 0
     return
   }
@@ -124,48 +153,160 @@ const startSpring = () => {
   animationFrame = requestAnimationFrame(stepSpring)
 }
 
-const measure = () => {
-  if (!tailRef.value) return
+const isAtPageBottom = () => {
+  const root = document.documentElement
+  const remaining = root.scrollHeight - window.innerHeight - window.scrollY
+  return remaining <= 2
+}
 
-  if (window.scrollY <= 1) {
-    targetProgress = 0
-    velocity = 0
-    stopSpring()
-    renderProgress(0)
-    return
-  }
+const getInputTravel = () => {
+  return Math.max(revealHeight.value, 1)
+}
 
-  const rect = tailRef.value.getBoundingClientRect()
-  const tailHeight = Math.max(rect.height, 1)
-  const raw = (window.innerHeight - rect.top) / tailHeight
-  const visibleProgress = clamp01(raw)
+const updateRevealHeight = () => {
+  revealHeight.value = revealRef.value?.getBoundingClientRect().height ?? 0
+}
 
-  if (visibleProgress <= 0) {
-    targetProgress = 0
-    velocity = 0
-    stopSpring()
-    renderProgress(0)
-    return
-  }
+const resetInteraction = () => {
+  stopSpring()
+  targetProgress = 0
+  currentProgress = 0
+  velocity = 0
+  touchActive = false
+  lastTouchY = null
+  renderProgress(0)
+  interactionState.value = 'hidden'
+}
 
-  targetProgress = clamp01(safeMinReveal.value + (1 - safeMinReveal.value) * visibleProgress)
+const settleInteraction = () => {
+  const nextTarget = decideSnapTarget(currentProgress, safeSnapThreshold.value)
+  targetProgress = nextTarget
+  interactionState.value = nextTarget === 1 ? 'pulling' : 'collapsing'
 
   if (reducedMotion.value) {
     stopSpring()
     velocity = 0
-    renderProgress(targetProgress)
+    renderProgress(nextTarget)
+    interactionState.value = nextTarget === 1 ? 'expanded' : 'hidden'
     return
   }
 
   startSpring()
 }
 
+const applyInteractionDelta = (delta) => {
+  const previousProgress = currentProgress
+  const nextProgress = applyInputDelta(previousProgress, delta, getInputTravel())
+  if (nextProgress === previousProgress) return false
+
+  stopSpring()
+  velocity = 0
+  targetProgress = nextProgress
+  renderProgress(nextProgress)
+  interactionState.value = nextProgress > previousProgress ? 'pulling' : 'collapsing'
+  return true
+}
+
+const handleTouchStart = (event) => {
+  if (!mobileMode.value) return
+
+  if (event.touches.length !== 1) {
+    touchActive = false
+    lastTouchY = null
+    return
+  }
+
+  touchActive = isAtPageBottom() || currentProgress > 0
+  lastTouchY = touchActive ? event.touches[0].clientY : null
+}
+
+const handleTouchMove = (event) => {
+  if (!mobileMode.value) return
+  if (!touchActive || event.touches.length !== 1 || lastTouchY === null) return
+
+  const nextY = event.touches[0].clientY
+  const delta = lastTouchY - nextY
+  lastTouchY = nextY
+
+  const canOpen = delta > 0 && isAtPageBottom()
+  const canClose = delta < 0 && currentProgress > 0
+  if ((canOpen || canClose) && applyInteractionDelta(delta)) event.preventDefault()
+}
+
+const handleTouchEnd = () => {
+  if (!mobileMode.value) return
+  if (touchActive) settleInteraction()
+  touchActive = false
+  lastTouchY = null
+}
+
+const measureDesktopProgress = () => {
+  if (!desktopTailRef.value) return
+
+  const rect = desktopTailRef.value.getBoundingClientRect()
+  const tailHeight = Math.max(rect.height, 1)
+  const visibleProgress = clamp01((window.innerHeight - rect.top) / tailHeight)
+
+  targetProgress = visibleProgress
+
+  if (reducedMotion.value) {
+    stopSpring()
+    velocity = 0
+    renderProgress(targetProgress)
+    interactionState.value = targetProgress >= 1
+      ? 'expanded'
+      : targetProgress <= 0
+        ? 'hidden'
+        : 'pulling'
+    return
+  }
+
+  interactionState.value = targetProgress <= 0
+    ? 'hidden'
+    : targetProgress < currentProgress
+      ? 'collapsing'
+      : 'pulling'
+  startSpring()
+}
+
+const measure = () => {
+  if (!mobileMode.value) {
+    measureDesktopProgress()
+    return
+  }
+
+  if (!isAtPageBottom()) resetInteraction()
+}
+
 const handleMotionPreference = () => {
   reducedMotion.value = motionQuery.matches
-  measure()
+  if (mobileMode.value && reducedMotion.value) {
+    settleInteraction()
+  } else {
+    measure()
+  }
+}
+
+const handleModeChange = () => {
+  const nextMobileMode = modeQuery.matches
+  if (nextMobileMode === mobileMode.value) return
+
+  mobileMode.value = nextMobileMode
+  resetInteraction()
+  updateRevealHeight()
+  requestAnimationFrame(measure)
 }
 
 onMounted(() => {
+  modeQuery = window.matchMedia('(max-width: 720px)')
+  mobileMode.value = modeQuery.matches
+
+  if (modeQuery.addEventListener) {
+    modeQuery.addEventListener('change', handleModeChange)
+  } else {
+    modeQuery.addListener(handleModeChange)
+  }
+
   motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
   reducedMotion.value = motionQuery.matches
 
@@ -176,18 +317,26 @@ onMounted(() => {
   }
 
   measure()
+  updateRevealHeight()
   layoutFrame = requestAnimationFrame(() => {
     layoutFrame = 0
+    updateRevealHeight()
     measure()
   })
   window.addEventListener('load', measure, { once: true })
   window.addEventListener('scroll', measure, { passive: true })
   window.addEventListener('resize', measure, { passive: true })
+  window.addEventListener('touchstart', handleTouchStart, { passive: true })
+  window.addEventListener('touchmove', handleTouchMove, { passive: false })
+  window.addEventListener('touchend', handleTouchEnd, { passive: true })
+  window.addEventListener('touchcancel', handleTouchEnd, { passive: true })
 
   if ('ResizeObserver' in window) {
-    resizeObserver = new ResizeObserver(measure)
-    resizeObserver.observe(document.body)
-    resizeObserver.observe(document.documentElement)
+    resizeObserver = new ResizeObserver(() => {
+      updateRevealHeight()
+      measure()
+    })
+    resizeObserver.observe(revealRef.value)
   }
 })
 
@@ -195,6 +344,18 @@ onBeforeUnmount(() => {
   window.removeEventListener('load', measure)
   window.removeEventListener('scroll', measure)
   window.removeEventListener('resize', measure)
+  window.removeEventListener('touchstart', handleTouchStart)
+  window.removeEventListener('touchmove', handleTouchMove)
+  window.removeEventListener('touchend', handleTouchEnd)
+  window.removeEventListener('touchcancel', handleTouchEnd)
+
+  if (modeQuery) {
+    if (modeQuery.removeEventListener) {
+      modeQuery.removeEventListener('change', handleModeChange)
+    } else {
+      modeQuery.removeListener(handleModeChange)
+    }
+  }
 
   if (motionQuery) {
     if (motionQuery.removeEventListener) {
@@ -219,14 +380,26 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    ref="tailRef"
     class="footer-spring-glow"
-    :class="{ 'is-reduced-motion': reducedMotion }"
+    :class="[
+      `is-${interactionState}`,
+      {
+        'is-reduced-motion': reducedMotion
+      }
+    ]"
     :style="rootStyle"
-    aria-hidden="true"
   >
-    <div class="footer-spring-glow__floor"></div>
-    <div class="footer-spring-glow__band">
+    <div class="footer-spring-glow__content">
+      <slot />
+    </div>
+
+    <div ref="desktopTailRef" class="footer-spring-glow__desktop-tail"></div>
+
+    <div
+      ref="revealRef"
+      class="footer-spring-glow__reveal"
+      aria-hidden="true"
+    >
       <svg
         class="footer-spring-glow__svg"
         :viewBox="`0 0 ${VBW} ${VBH}`"
@@ -250,15 +423,18 @@ onBeforeUnmount(() => {
         </defs>
 
         <g
-          v-for="(barHeight, index) in barHeights"
+          v-for="(bar, index) in barModels"
           :key="index"
+          class="footer-spring-glow__bar"
+          :class="{ 'is-breathing': isExpanded }"
+          :style="barStyle(bar.breath)"
           :filter="`url(#${blurId})`"
         >
           <rect
             :x="index * columnWidth"
-            :y="VBH - barHeight"
-            :width="columnWidth * 1.23"
-            :height="barHeight"
+            :y="VBH - bar.height"
+            :width="columnWidth * 2.0"
+            :height="bar.height"
             :fill="`url(#${gradientId})`"
           />
         </g>
@@ -270,9 +446,33 @@ onBeforeUnmount(() => {
 <style scoped>
 .footer-spring-glow {
   position: relative;
-  min-height: var(--footer-tail-height);
+  z-index: 40;
+}
+
+.footer-spring-glow__content {
+  position: relative;
+  z-index: 3;
+  transform: none;
+}
+
+.footer-spring-glow__desktop-tail {
+  position: relative;
+  min-height: var(--footer-desktop-tail-height);
+  background: #050505;
+}
+
+.footer-spring-glow__reveal {
+  position: fixed;
+  isolation: isolate;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  height: min(38vh, 520px);
   overflow: hidden;
   pointer-events: none;
+  transform: translate3d(0, calc(100% - var(--footer-reveal-offset)), 0);
+  will-change: transform, opacity;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
     linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
@@ -280,57 +480,63 @@ onBeforeUnmount(() => {
   background-size: 340px 100%, 100% 220px;
 }
 
-.footer-spring-glow__floor {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(5, 5, 5, 0.88), rgba(5, 5, 5, 0.18) 46%, rgba(5, 5, 5, 0.94)),
-    url("/template-assets/noise-texture.png") top center / cover no-repeat;
-  opacity: 0.42;
-  pointer-events: none;
-}
-
-.footer-spring-glow__band {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 2;
-  height: min(58vh, 520px);
-  pointer-events: none;
-  opacity: var(--footer-glow-opacity);
-  transform-origin: bottom;
-  transform:
-    translate3d(0, var(--footer-glow-lift), 0)
-    scaleY(var(--footer-glow-progress));
-  will-change: transform, opacity;
-  mix-blend-mode: screen;
-}
-
 .footer-spring-glow__svg {
   display: block;
   width: 100%;
   height: 100%;
+  opacity: var(--footer-glow-opacity);
+}
+
+.footer-spring-glow__bar {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.footer-spring-glow__bar.is-breathing {
+  animation: footerBarBreathe var(--bar-breath-duration) ease-in-out
+    var(--bar-breath-delay) infinite alternate;
+}
+
+@keyframes footerBarBreathe {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(var(--bar-breath-scale)); }
 }
 
 @media (max-width: 720px) {
-  .footer-spring-glow {
-    min-height: var(--footer-tail-height-mobile);
+  .footer-spring-glow__content {
+    transform: translate3d(0, calc(-1 * var(--footer-reveal-offset)), 0);
+    will-change: transform;
+  }
+
+  .footer-spring-glow__desktop-tail {
+    display: none;
+  }
+
+  .footer-spring-glow__reveal {
+    height: min(46vh, 360px);
     background-size: 220px 100%, 100% 180px;
   }
 
-  .footer-spring-glow__band {
-    height: min(46vh, 360px);
+  .footer-spring-glow__svg {
     opacity: calc(var(--footer-glow-opacity) * 0.76);
   }
 }
 
+@media (min-width: 721px) {
+  .footer-spring-glow__desktop-tail {
+    min-height: var(--footer-desktop-tail-height);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .footer-spring-glow__band {
-    transform:
-      translate3d(0, var(--footer-glow-lift), 0)
-      scaleY(var(--footer-glow-progress));
+  .footer-spring-glow__content,
+  .footer-spring-glow__reveal {
     will-change: auto;
+  }
+
+  .footer-spring-glow__bar.is-breathing {
+    animation: none;
+    transform: none;
   }
 }
 </style>

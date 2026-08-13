@@ -32,30 +32,30 @@ import FooterSpringGlow from './components/FooterSpringGlow.vue'
       </RouterView>
     </main>
 
-    <footer class="footer">
-      <div class="container footer-inner">
-        <div class="footer-brand">
-          <span class="logo-mark" aria-hidden="true">
-            <img src="/brand/dbz-logo.png" alt="" />
-          </span>
-          <div>
-            <p class="footer-name">大笨钟 / DEV</p>
-            <p class="footer-desc">独立开发者 · 做自己的小产品</p>
+    <FooterSpringGlow>
+      <footer class="footer">
+        <div class="container footer-inner">
+          <div class="footer-brand">
+            <span class="logo-mark" aria-hidden="true">
+              <img src="/brand/dbz-logo.png" alt="" />
+            </span>
+            <div>
+              <p class="footer-name">大笨钟 / DEV</p>
+              <p class="footer-desc">独立开发者 · 做自己的小产品</p>
+            </div>
+          </div>
+          <div class="footer-links">
+            <a href="https://github.com/DaBenZhong33" target="_blank" rel="noopener">GitHub</a>
+            <a href="mailto:li2814054665@163.com">Email</a>
+            <span class="footer-social-text">微信 lzg2814054665</span>
+            <span class="footer-social-text">QQ 2814054665</span>
           </div>
         </div>
-        <div class="footer-links">
-          <a href="https://github.com/DaBenZhong33" target="_blank" rel="noopener">GitHub</a>
-          <a href="mailto:li2814054665@163.com">Email</a>
-          <span class="footer-social-text">微信 lzg2814054665</span>
-          <span class="footer-social-text">QQ 2814054665</span>
+        <div class="container footer-copy">
+          © 2026 大笨钟 · Vue 3 + Vite
         </div>
-      </div>
-      <div class="container footer-copy">
-        © 2026 大笨钟 · Vue 3 + Vite
-      </div>
-    </footer>
-
-    <FooterSpringGlow />
+      </footer>
+    </FooterSpringGlow>
 
     <BackToTop />
   </div>
