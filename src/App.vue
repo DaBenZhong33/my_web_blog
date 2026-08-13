@@ -20,7 +20,7 @@ import FooterSpringGlow from './components/FooterSpringGlow.vue'
           <RouterLink :to="{ path: '/', hash: '#work' }">作品</RouterLink>
           <RouterLink to="/about">关于</RouterLink>
         </nav>
-        <a class="btn btn-primary nav-cta" href="mailto:hello@example.com" v-magnetic>邮件</a>
+        <a class="btn btn-primary nav-cta" href="mailto:li2814054665@163.com" v-magnetic>邮件</a>
       </div>
     </header>
 
@@ -44,9 +44,10 @@ import FooterSpringGlow from './components/FooterSpringGlow.vue'
           </div>
         </div>
         <div class="footer-links">
-          <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
-          <a href="mailto:hello@example.com">Email</a>
-          <a href="#" target="_blank" rel="noopener">即刻</a>
+          <a href="https://github.com/DaBenZhong33" target="_blank" rel="noopener">GitHub</a>
+          <a href="mailto:li2814054665@163.com">Email</a>
+          <span class="footer-social-text">微信 lzg2814054665</span>
+          <span class="footer-social-text">QQ 2814054665</span>
         </div>
       </div>
       <div class="container footer-copy">
@@ -207,7 +208,8 @@ main {
   flex-wrap: wrap;
 }
 
-.footer-links a {
+.footer-links a,
+.footer-social-text {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
@@ -216,6 +218,9 @@ main {
   font-size: 13px;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.footer-links a {
   transition: color 0.2s;
 }
 

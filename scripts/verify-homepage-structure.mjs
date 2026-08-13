@@ -6,6 +6,7 @@ const root = process.cwd()
 const files = {
   app: 'src/App.vue',
   home: 'src/views/HomeView.vue',
+  about: 'src/views/AboutView.vue',
   rail: 'src/components/SectionRail.vue',
   preview: 'src/components/ProjectPreviewCard.vue',
   style: 'src/style.css',
@@ -36,6 +37,7 @@ const rejectPattern = (label, content, pattern) => {
 }
 
 const home = readUtf8(files.home)
+const about = readUtf8(files.about)
 const rail = readUtf8(files.rail)
 const preview = readUtf8(files.preview)
 const style = readUtf8(files.style)
@@ -51,6 +53,7 @@ const garbledPattern = /[\uFFFD\u951F\u00C3\u00C2]/
 for (const [label, content] of Object.entries({
   app,
   home,
+  about,
   rail,
   preview,
   style,
@@ -108,10 +111,41 @@ for (const pattern of [
   /import FooterSpringGlow from '\.\/components\/FooterSpringGlow\.vue'/,
   /<footer class="footer">[\s\S]*<\/footer>\s*<FooterSpringGlow\s*\/>/,
   /<p class="footer-name">大笨钟 \/ DEV<\/p>/,
-  /<a href="mailto:hello@example.com">Email<\/a>/,
+  /<a href="mailto:li2814054665@163\.com">Email<\/a>/,
+  /href="https:\/\/github\.com\/DaBenZhong33"/,
+  /<span class="footer-social-text">微信 lzg2814054665<\/span>/,
+  /<span class="footer-social-text">QQ 2814054665<\/span>/,
   /<BackToTop\s*\/>/
 ]) {
   expectPattern(files.app, app, pattern)
+}
+
+for (const pattern of [
+  /href="mailto:li2814054665@163\.com" class="btn cta-button"/,
+  />li2814054665@163\.com<\/a>/
+]) {
+  expectPattern(files.home, home, pattern)
+}
+
+for (const pattern of [
+  /href="mailto:li2814054665@163\.com" class="btn btn-primary"/,
+  /href="https:\/\/github\.com\/DaBenZhong33"/,
+  /<span class="btn btn-ghost contact-handle">微信 lzg2814054665<\/span>/,
+  /<span class="btn btn-ghost contact-handle">QQ 2814054665<\/span>/
+]) {
+  expectPattern(files.about, about, pattern)
+}
+
+for (const [label, content] of Object.entries({ app, home, about })) {
+  for (const pattern of [
+    /hello@example\.com/,
+    /href="https:\/\/github\.com"/,
+    /href="#"/,
+    /即刻/,
+    /推特/
+  ]) {
+    rejectPattern(label, content, pattern)
+  }
 }
 
 for (const pattern of [

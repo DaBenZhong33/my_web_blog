@@ -84,9 +84,10 @@ const timeline = [
       <h2 class="section-title">找到我</h2>
       <p class="section-sub">邮件是最快的方式，一般 24 小时内回复。</p>
       <div class="contact-links">
-        <a href="mailto:hello@example.com" class="btn btn-primary">hello@example.com</a>
-        <a href="https://github.com" target="_blank" rel="noopener" class="btn btn-ghost">GitHub</a>
-        <a href="#" class="btn btn-ghost">即刻 / 推特</a>
+        <a href="mailto:li2814054665@163.com" class="btn btn-primary">li2814054665@163.com</a>
+        <a href="https://github.com/DaBenZhong33" target="_blank" rel="noopener" class="btn btn-ghost">GitHub</a>
+        <span class="btn btn-ghost contact-handle">微信 lzg2814054665</span>
+        <span class="btn btn-ghost contact-handle">QQ 2814054665</span>
       </div>
     </div>
   </section>
@@ -224,5 +225,9 @@ const timeline = [
   margin-top: 30px;
   flex-wrap: wrap;
   justify-content: center;
+}
+
+.contact-handle {
+  cursor: default;
 }
 </style>

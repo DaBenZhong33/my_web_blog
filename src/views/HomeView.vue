@@ -523,8 +523,8 @@ onUnmounted(() => {
         可以直接给我写邮件。
       </p>
       <div class="cta-actions">
-        <a href="mailto:hello@example.com" class="btn cta-button" v-magnetic>hello@example.com</a>
-        <a href="https://github.com" target="_blank" rel="noopener" class="btn cta-link" v-magnetic>GitHub</a>
+        <a href="mailto:li2814054665@163.com" class="btn cta-button" v-magnetic>li2814054665@163.com</a>
+        <a href="https://github.com/DaBenZhong33" target="_blank" rel="noopener" class="btn cta-link" v-magnetic>GitHub</a>
       </div>
     </div>
   </section>
