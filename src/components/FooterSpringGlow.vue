@@ -8,9 +8,6 @@ import {
 } from './footerSpringGlowMotion.js'
 
 const props = defineProps({
-  tailHeight: { type: String, default: '38vh' },
-  mobileTailHeight: { type: String, default: '30vh' },
-  minReveal: { type: Number, default: 0.035 },
   snapThreshold: { type: Number, default: 0.65 },
   settleDelay: { type: Number, default: 150 },
   bars: { type: Number, default: 9 },
@@ -33,7 +30,8 @@ const RUIXEN_STOPS = [
   { offset: 1, color: '#D7FF0000' }
 ]
 
-const tailRef = ref(null)
+const revealRef = ref(null)
+const revealHeight = ref(0)
 const progress = ref(0)
 const reducedMotion = ref(false)
 const interactionState = ref('hidden')
@@ -74,7 +72,6 @@ const bellHeights = (n, peak, valley) => {
 const safeBars = computed(() => Math.round(clampNumber(props.bars, 1, 32, 9)))
 const safePeak = computed(() => clampNumber(props.peak, 0, 1, 0.98))
 const safeValley = computed(() => clamp01(props.valley, 0.55))
-const safeMinReveal = computed(() => clamp01(props.minReveal, 0.035))
 const safeBlur = computed(() => clampNumber(props.blur, 0, 40, 15))
 const safeSnapThreshold = computed(() => clamp01(props.snapThreshold, 0.65))
 const safeSettleDelay = computed(() => clampNumber(props.settleDelay, 80, 400, 150))
@@ -97,13 +94,13 @@ const barStyle = (breath) => ({
 const rootStyle = computed(() => {
   const safeProgress = clamp01(progress.value)
   const glowOpacity = safeProgress <= 0 ? 0 : Math.min(0.96, 0.08 + safeProgress * 0.88)
+  const revealDistance = revealHeight.value
+  const revealOffset = revealDistance * safeProgress
 
   return {
-    '--footer-tail-height': props.tailHeight,
-    '--footer-tail-height-mobile': props.mobileTailHeight,
-    '--footer-glow-progress': safeProgress.toFixed(4),
-    '--footer-glow-opacity': glowOpacity.toFixed(4),
-    '--footer-glow-lift': `${((1 - safeProgress) * 18).toFixed(2)}px`
+    '--footer-reveal-distance': `${revealDistance.toFixed(2)}px`,
+    '--footer-reveal-offset': `${revealOffset.toFixed(2)}px`,
+    '--footer-glow-opacity': glowOpacity.toFixed(4)
   }
 })
 
@@ -157,8 +154,11 @@ const isAtPageBottom = () => {
 }
 
 const getInputTravel = () => {
-  const tailHeight = tailRef.value?.getBoundingClientRect().height ?? 0
-  return Math.max(tailHeight, window.innerHeight * 0.3, 1)
+  return Math.max(revealHeight.value, 1)
+}
+
+const updateRevealHeight = () => {
+  revealHeight.value = revealRef.value?.getBoundingClientRect().height ?? 0
 }
 
 const settleInteraction = () => {
@@ -268,8 +268,10 @@ onMounted(() => {
   }
 
   measure()
+  updateRevealHeight()
   layoutFrame = requestAnimationFrame(() => {
     layoutFrame = 0
+    updateRevealHeight()
     measure()
   })
   window.addEventListener('load', measure, { once: true })
@@ -282,9 +284,11 @@ onMounted(() => {
   window.addEventListener('touchcancel', handleTouchEnd, { passive: true })
 
   if ('ResizeObserver' in window) {
-    resizeObserver = new ResizeObserver(measure)
-    resizeObserver.observe(document.body)
-    resizeObserver.observe(document.documentElement)
+    resizeObserver = new ResizeObserver(() => {
+      updateRevealHeight()
+      measure()
+    })
+    resizeObserver.observe(revealRef.value)
   }
 })
 
@@ -322,7 +326,6 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    ref="tailRef"
     class="footer-spring-glow"
     :class="[
       `is-${interactionState}`,
@@ -331,10 +334,16 @@ onBeforeUnmount(() => {
       }
     ]"
     :style="rootStyle"
-    aria-hidden="true"
   >
-    <div class="footer-spring-glow__floor"></div>
-    <div class="footer-spring-glow__band">
+    <div class="footer-spring-glow__content">
+      <slot />
+    </div>
+
+    <div
+      ref="revealRef"
+      class="footer-spring-glow__reveal"
+      aria-hidden="true"
+    >
       <svg
         class="footer-spring-glow__svg"
         :viewBox="`0 0 ${VBW} ${VBH}`"
@@ -381,41 +390,34 @@ onBeforeUnmount(() => {
 <style scoped>
 .footer-spring-glow {
   position: relative;
-  min-height: var(--footer-tail-height);
-  overflow: hidden;
-  pointer-events: none;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    #050505;
-  background-size: 340px 100%, 100% 220px;
+  z-index: 1;
 }
 
-.footer-spring-glow__floor {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(5, 5, 5, 0.88), rgba(5, 5, 5, 0.18) 46%, rgba(5, 5, 5, 0.94)),
-    url("/template-assets/noise-texture.png") top center / cover no-repeat;
-  opacity: 0.42;
-  pointer-events: none;
+.footer-spring-glow__content {
+  position: relative;
+  z-index: 3;
+  transform: translate3d(0, calc(-1 * var(--footer-reveal-offset)), 0);
+  will-change: transform;
 }
 
-.footer-spring-glow__band {
+.footer-spring-glow__reveal {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 2;
   height: min(58vh, 520px);
+  overflow: hidden;
   pointer-events: none;
   opacity: var(--footer-glow-opacity);
-  transform-origin: bottom;
-  transform:
-    translate3d(0, var(--footer-glow-lift), 0)
-    scaleY(var(--footer-glow-progress));
+  transform: translate3d(0, calc(100% - var(--footer-reveal-offset)), 0);
   will-change: transform, opacity;
   mix-blend-mode: screen;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    #050505;
+  background-size: 340px 100%, 100% 220px;
 }
 
 .footer-spring-glow__svg {
@@ -440,22 +442,16 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 720px) {
-  .footer-spring-glow {
-    min-height: var(--footer-tail-height-mobile);
-    background-size: 220px 100%, 100% 180px;
-  }
-
-  .footer-spring-glow__band {
+  .footer-spring-glow__reveal {
     height: min(46vh, 360px);
     opacity: calc(var(--footer-glow-opacity) * 0.76);
+    background-size: 220px 100%, 100% 180px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .footer-spring-glow__band {
-    transform:
-      translate3d(0, var(--footer-glow-lift), 0)
-      scaleY(var(--footer-glow-progress));
+  .footer-spring-glow__content,
+  .footer-spring-glow__reveal {
     will-change: auto;
   }
 
