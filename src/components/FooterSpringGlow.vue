@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   applyInputDelta,
   clamp01,
+  createBreathProfile,
   decideSnapTarget
 } from './footerSpringGlowMotion.js'
 
@@ -78,8 +79,20 @@ const safeBlur = computed(() => clampNumber(props.blur, 0, 40, 15))
 const safeSnapThreshold = computed(() => clamp01(props.snapThreshold, 0.65))
 const safeSettleDelay = computed(() => clampNumber(props.settleDelay, 80, 400, 150))
 const isExpanded = computed(() => interactionState.value === 'expanded')
-const barHeights = computed(() => bellHeights(safeBars.value, safePeak.value, safeValley.value))
+const barModels = computed(() => {
+  const heights = bellHeights(safeBars.value, safePeak.value, safeValley.value)
+  return heights.map((height, index) => ({
+    height,
+    breath: createBreathProfile(index)
+  }))
+})
 const columnWidth = computed(() => VBW / safeBars.value)
+
+const barStyle = (breath) => ({
+  '--bar-breath-scale': breath.scale,
+  '--bar-breath-duration': `${breath.duration}s`,
+  '--bar-breath-delay': `${breath.delay}s`
+})
 
 const rootStyle = computed(() => {
   const safeProgress = clamp01(progress.value)
@@ -345,15 +358,18 @@ onBeforeUnmount(() => {
         </defs>
 
         <g
-          v-for="(barHeight, index) in barHeights"
+          v-for="(bar, index) in barModels"
           :key="index"
+          class="footer-spring-glow__bar"
+          :class="{ 'is-breathing': isExpanded }"
+          :style="barStyle(bar.breath)"
           :filter="`url(#${blurId})`"
         >
           <rect
             :x="index * columnWidth"
-            :y="VBH - barHeight"
+            :y="VBH - bar.height"
             :width="columnWidth * 1.23"
-            :height="barHeight"
+            :height="bar.height"
             :fill="`url(#${gradientId})`"
           />
         </g>
@@ -408,6 +424,21 @@ onBeforeUnmount(() => {
   height: 100%;
 }
 
+.footer-spring-glow__bar {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+.footer-spring-glow__bar.is-breathing {
+  animation: footerBarBreathe var(--bar-breath-duration) ease-in-out
+    var(--bar-breath-delay) infinite alternate;
+}
+
+@keyframes footerBarBreathe {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(var(--bar-breath-scale)); }
+}
+
 @media (max-width: 720px) {
   .footer-spring-glow {
     min-height: var(--footer-tail-height-mobile);
@@ -426,6 +457,11 @@ onBeforeUnmount(() => {
       translate3d(0, var(--footer-glow-lift), 0)
       scaleY(var(--footer-glow-progress));
     will-change: auto;
+  }
+
+  .footer-spring-glow__bar.is-breathing {
+    animation: none;
+    transform: none;
   }
 }
 </style>

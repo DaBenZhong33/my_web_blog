@@ -313,6 +313,7 @@ for (const pattern of [
   /addEventListener\('wheel', handleWheel, \{ passive: false \}\)/,
   /addEventListener\('touchmove', handleTouchMove, \{ passive: false \}\)/,
   /removeEventListener\('touchcancel', handleTouchEnd\)/,
+  /createBreathProfile/,
   /prefers-reduced-motion/,
   /aria-hidden="true"/,
   /<svg\b/,
@@ -321,6 +322,8 @@ for (const pattern of [
   /v-for="(?:stop|\([a-zA-Z]+,\s*[a-zA-Z]+\)) in RUIXEN_STOPS"/,
   /footer-spring-glow__band/,
   /footer-spring-glow__floor/,
+  /footer-spring-glow__bar/,
+  /@keyframes footerBarBreathe/,
   /pointer-events:\s*none/,
   /@media \(prefers-reduced-motion: reduce\)/
 ]) {
