@@ -295,14 +295,15 @@ for (const pattern of [
   /texture\.repeat\.set\(1, 1\)/,
   /EquirectangularReflectionMapping/,
   /envMap:\s*reflectionTexture/,
-  /diagonalGlint/,
-  /edgeSheen/,
+  /fineBrush/,
+  /reflectionBand/,
+  /new THREE\.HemisphereLight/,
   /bumpMap:\s*brushTexture/,
-  /bumpScale:\s*0\.035/,
-  /anisotropy:\s*0\.82/,
-  /roughness:\s*0\.2/,
-  /clearcoat:\s*0\.28/,
-  /metalness:\s*0\.86/,
+  /metalness:\s*0\.92/,
+  /roughness:\s*0\.3/,
+  /clearcoat:\s*0\.14/,
+  /envMapIntensity:\s*1\.38/,
+  /opacity:\s*0\.18/,
   /unfoldedCameraZ/,
   /camera\.position\.z = THREE\.MathUtils\.lerp\(settings\.cameraZ, settings\.unfoldedCameraZ, unfoldProgress\)/,
   /triggerTouchUnfold/,
@@ -405,7 +406,9 @@ for (const pattern of [
   /baseGradient\.addColorStop\(0\.62/,
   /baseGradient\.addColorStop\(1,\s*'#d9ddd6'\)/,
   /MeshStandardMaterial/,
-  /roughness:\s*0\.36/
+  /roughness:\s*0\.36/,
+  /opacity:\s*0\.48/,
+  /new THREE\.AmbientLight/
 ]) {
   rejectPattern(files.heroCube, heroCube, pattern)
 }

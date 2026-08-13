@@ -122,54 +122,30 @@ const createBrushTexture = () => {
   canvas.height = TEXTURE_SIZE
 
   const context = canvas.getContext('2d')
-  context.fillStyle = '#8b938d'
+  context.fillStyle = '#59605b'
   context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
 
   for (let y = 0; y < TEXTURE_SIZE; y += 1) {
-    const wave = Math.sin(y * 0.085) * 11 + Math.sin(y * 0.27) * 6
-    const shade = 142 + Math.round(wave)
-    context.fillStyle = `rgba(${shade}, ${shade}, ${shade}, ${y % 5 === 0 ? 0.24 : 0.13})`
+    const fineBrush = Math.sin(y * 0.31) * 5 + Math.sin(y * 1.73) * 2
+    const shade = 112 + Math.round(fineBrush)
+    context.fillStyle = `rgba(${shade}, ${shade + 3}, ${shade}, ${y % 3 === 0 ? 0.2 : 0.09})`
     context.fillRect(0, y, TEXTURE_SIZE, 1)
   }
 
-  for (let y = 0; y < TEXTURE_SIZE; y += 7) {
-    const offset = Math.sin(y * 0.37) * 18
-    context.fillStyle = 'rgba(255, 255, 255, 0.09)'
-    context.fillRect(Math.max(0, offset), y, TEXTURE_SIZE - Math.abs(offset), 1)
+  for (let y = 4; y < TEXTURE_SIZE; y += 11) {
+    const length = TEXTURE_SIZE * (0.58 + Math.sin(y * 0.17) * 0.18)
+    context.fillStyle = 'rgba(238, 243, 237, 0.08)'
+    context.fillRect((TEXTURE_SIZE - length) / 2, y, length, 1)
   }
 
   context.globalCompositeOperation = 'screen'
-  const diagonalGlint = context.createLinearGradient(0, TEXTURE_SIZE, TEXTURE_SIZE, 0)
-  diagonalGlint.addColorStop(0, 'rgba(255,255,255,0.02)')
-  diagonalGlint.addColorStop(0.34, 'rgba(255,255,255,0.05)')
-  diagonalGlint.addColorStop(0.52, 'rgba(255,255,255,0.2)')
-  diagonalGlint.addColorStop(0.68, 'rgba(255,255,255,0.07)')
-  diagonalGlint.addColorStop(1, 'rgba(255,255,255,0.03)')
-  context.fillStyle = diagonalGlint
-  context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
-
-  const edgeSheen = context.createLinearGradient(0, 0, TEXTURE_SIZE, 0)
-  edgeSheen.addColorStop(0, 'rgba(255,255,255,0.14)')
-  edgeSheen.addColorStop(0.16, 'rgba(255,255,255,0.03)')
-  edgeSheen.addColorStop(0.78, 'rgba(255,255,255,0.02)')
-  edgeSheen.addColorStop(1, 'rgba(255,255,255,0.18)')
-  context.fillStyle = edgeSheen
-  context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
-
-  context.globalCompositeOperation = 'multiply'
-  const edgeDepth = context.createLinearGradient(0, 0, 0, TEXTURE_SIZE)
-  edgeDepth.addColorStop(0, 'rgba(0,0,0,0.1)')
-  edgeDepth.addColorStop(0.48, 'rgba(255,255,255,1)')
-  edgeDepth.addColorStop(1, 'rgba(0,0,0,0.18)')
-  context.fillStyle = edgeDepth
-  context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
-
-  context.globalCompositeOperation = 'screen'
-  const highlight = context.createLinearGradient(0, 0, TEXTURE_SIZE, 0)
-  highlight.addColorStop(0, 'rgba(255,255,255,0.03)')
-  highlight.addColorStop(0.5, 'rgba(255,255,255,0.12)')
-  highlight.addColorStop(1, 'rgba(255,255,255,0.04)')
-  context.fillStyle = highlight
+  const reflectionBand = context.createLinearGradient(0, 0, TEXTURE_SIZE, 0)
+  reflectionBand.addColorStop(0, 'rgba(255,255,255,0.015)')
+  reflectionBand.addColorStop(0.34, 'rgba(255,255,255,0.035)')
+  reflectionBand.addColorStop(0.48, 'rgba(255,255,255,0.2)')
+  reflectionBand.addColorStop(0.56, 'rgba(255,255,255,0.055)')
+  reflectionBand.addColorStop(1, 'rgba(255,255,255,0.02)')
+  context.fillStyle = reflectionBand
   context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
 
   const texture = new THREE.CanvasTexture(canvas)
@@ -187,24 +163,26 @@ const createReflectionTexture = () => {
   canvas.height = TEXTURE_SIZE
 
   const context = canvas.getContext('2d')
-  const sky = context.createLinearGradient(0, 0, canvas.width, 0)
-  sky.addColorStop(0, '#050606')
-  sky.addColorStop(0.16, '#acb5ac')
-  sky.addColorStop(0.25, '#5d655f')
-  sky.addColorStop(0.42, '#111413')
-  sky.addColorStop(0.56, '#c3cbc0')
-  sky.addColorStop(0.68, '#7a837c')
-  sky.addColorStop(0.82, '#090b0b')
-  sky.addColorStop(1, '#cbd0c6')
-  context.fillStyle = sky
+  const reflectionBand = context.createLinearGradient(0, 0, canvas.width, 0)
+  reflectionBand.addColorStop(0, '#050706')
+  reflectionBand.addColorStop(0.12, '#1d221f')
+  reflectionBand.addColorStop(0.2, '#d9e0d8')
+  reflectionBand.addColorStop(0.235, '#737b74')
+  reflectionBand.addColorStop(0.43, '#0b0e0c')
+  reflectionBand.addColorStop(0.57, '#bbc3bc')
+  reflectionBand.addColorStop(0.61, '#eef2ec')
+  reflectionBand.addColorStop(0.69, '#343a36')
+  reflectionBand.addColorStop(0.84, '#070908')
+  reflectionBand.addColorStop(1, '#8e9790')
+  context.fillStyle = reflectionBand
   context.fillRect(0, 0, canvas.width, canvas.height)
 
-  const horizon = context.createLinearGradient(0, 0, 0, canvas.height)
-  horizon.addColorStop(0, 'rgba(255,255,255,0.18)')
-  horizon.addColorStop(0.48, 'rgba(255,255,255,0.02)')
-  horizon.addColorStop(0.54, 'rgba(0,0,0,0.36)')
-  horizon.addColorStop(1, 'rgba(0,0,0,0.74)')
-  context.fillStyle = horizon
+  const verticalFalloff = context.createLinearGradient(0, 0, 0, canvas.height)
+  verticalFalloff.addColorStop(0, 'rgba(255,255,255,0.2)')
+  verticalFalloff.addColorStop(0.42, 'rgba(255,255,255,0.025)')
+  verticalFalloff.addColorStop(0.58, 'rgba(0,0,0,0.32)')
+  verticalFalloff.addColorStop(1, 'rgba(0,0,0,0.78)')
+  context.fillStyle = verticalFalloff
   context.fillRect(0, 0, canvas.width, canvas.height)
 
   const texture = new THREE.CanvasTexture(canvas)
@@ -311,19 +289,19 @@ const resizeRenderer = () => {
 const createFace = (definition) => {
   const plane = new THREE.PlaneGeometry(FACE_SIZE, FACE_SIZE, 18, 18)
   const material = new THREE.MeshPhysicalMaterial({
-    color: 0xb4bbb1,
+    color: 0x9ba39c,
     map: brushTexture,
     bumpMap: brushTexture,
-    bumpScale: 0.035,
+    bumpScale: 0.024,
     envMap: reflectionTexture,
-    anisotropy: 0.82,
+    anisotropy: 0.74,
     anisotropyRotation: Math.PI / 2,
-    metalness: 0.86,
-    roughness: 0.2,
-    clearcoat: 0.28,
-    clearcoatRoughness: 0.16,
-    reflectivity: 0.82,
-    envMapIntensity: 1.22,
+    metalness: 0.92,
+    roughness: 0.3,
+    clearcoat: 0.14,
+    clearcoatRoughness: 0.28,
+    reflectivity: 0.76,
+    envMapIntensity: 1.38,
     side: THREE.DoubleSide
   })
   const mesh = new THREE.Mesh(plane, material)
@@ -331,9 +309,9 @@ const createFace = (definition) => {
   const edge = new THREE.LineSegments(
     new THREE.EdgesGeometry(plane),
     new THREE.LineBasicMaterial({
-      color: 0xffffff,
+      color: 0xe8eee8,
       transparent: true,
-      opacity: 0.48
+      opacity: 0.18
     })
   )
 
@@ -370,21 +348,23 @@ const createScene = () => {
   renderer.domElement.style.height = '100%'
   canvasHost.value.appendChild(renderer.domElement)
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.58))
+  const hemisphereLight = new THREE.HemisphereLight(0xe6ece5, 0x080b09, 0.9)
+  scene.add(hemisphereLight)
 
-  const keyLight = new THREE.DirectionalLight(0xffffff, 2.15)
-  keyLight.position.set(4, 5, 6)
+  const keyLight = new THREE.DirectionalLight(0xffffff, 2.4)
+  keyLight.position.set(4.8, 6.2, 5.4)
   scene.add(keyLight)
 
-  const rimLight = new THREE.DirectionalLight(ACCENT, 0.78)
-  rimLight.position.set(-3, 1.8, -4)
+  const rimLight = new THREE.DirectionalLight(ACCENT, 0.42)
+  rimLight.position.set(-4.5, 1.4, -5.2)
   scene.add(rimLight)
 
-  const fillLight = new THREE.PointLight(0xffffff, 0.86, 14)
-  fillLight.position.set(0.6, -1.6, 4.5)
+  const fillLight = new THREE.PointLight(0xdde5df, 0.55, 16)
+  fillLight.position.set(0.8, -1.4, 4.8)
   scene.add(fillLight)
 
   brushTexture = createBrushTexture()
+  brushTexture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8)
   reflectionTexture = createReflectionTexture()
   scene.environment = reflectionTexture
   cubeGroup = new THREE.Group()
