@@ -2,6 +2,7 @@
 import { RouterView, RouterLink } from 'vue-router'
 import ScrollProgress from './components/ScrollProgress.vue'
 import BackToTop from './components/BackToTop.vue'
+import FooterSpringGlow from './components/FooterSpringGlow.vue'
 </script>
 
 <template>
@@ -52,6 +53,8 @@ import BackToTop from './components/BackToTop.vue'
         © 2026 大笨钟 · Vue 3 + Vite
       </div>
     </footer>
+
+    <FooterSpringGlow />
 
     <BackToTop />
   </div>
