@@ -20,7 +20,6 @@ let cubeGroup
 let brushTexture
 let reflectionTexture
 let core
-let coreSpokes
 let resizeObserver
 let animationFrame = 0
 let unfoldTarget = 0
@@ -28,18 +27,12 @@ let unfoldProgress = 0
 let lastFrameTime = 0
 let touchTimer = 0
 let motionQuery
-let spinRotation = 0.52
-let pointerTargetX = 0
-let pointerTargetY = 0
-let pointerTiltX = 0
-let pointerTiltY = 0
 
 const faceDefinitions = [
   {
     name: 'front',
     closedPosition: new THREE.Vector3(0, 0, HALF_SIZE),
     normal: new THREE.Vector3(0, 0, 1),
-    stagger: 0,
     openPosition: new THREE.Vector3(0.08, 0, 2.25),
     closedRotation: new THREE.Euler(0, 0, 0),
     openRotation: new THREE.Euler(0.24, -0.18, 0.16)
@@ -48,7 +41,6 @@ const faceDefinitions = [
     name: 'back',
     closedPosition: new THREE.Vector3(0, 0, -HALF_SIZE),
     normal: new THREE.Vector3(0, 0, -1),
-    stagger: 0,
     openPosition: new THREE.Vector3(-0.14, 0.02, -2.45),
     closedRotation: new THREE.Euler(0, Math.PI, 0),
     openRotation: new THREE.Euler(-0.22, Math.PI + 0.24, -0.18)
@@ -57,7 +49,6 @@ const faceDefinitions = [
     name: 'right',
     closedPosition: new THREE.Vector3(HALF_SIZE, 0, 0),
     normal: new THREE.Vector3(1, 0, 0),
-    stagger: 0.08,
     openPosition: new THREE.Vector3(2.85, 0.14, 0.12),
     closedRotation: new THREE.Euler(0, Math.PI / 2, 0),
     openRotation: new THREE.Euler(0.18, Math.PI / 2 + 0.28, 0.22)
@@ -66,7 +57,6 @@ const faceDefinitions = [
     name: 'left',
     closedPosition: new THREE.Vector3(-HALF_SIZE, 0, 0),
     normal: new THREE.Vector3(-1, 0, 0),
-    stagger: 0.08,
     openPosition: new THREE.Vector3(-2.85, -0.14, -0.1),
     closedRotation: new THREE.Euler(0, -Math.PI / 2, 0),
     openRotation: new THREE.Euler(-0.2, -Math.PI / 2 - 0.26, -0.24)
@@ -75,7 +65,6 @@ const faceDefinitions = [
     name: 'top',
     closedPosition: new THREE.Vector3(0, HALF_SIZE, 0),
     normal: new THREE.Vector3(0, 1, 0),
-    stagger: 0.16,
     openPosition: new THREE.Vector3(0.18, 2.65, 0.06),
     closedRotation: new THREE.Euler(-Math.PI / 2, 0, 0),
     openRotation: new THREE.Euler(-Math.PI / 2 - 0.3, 0.2, -0.2)
@@ -84,7 +73,6 @@ const faceDefinitions = [
     name: 'bottom',
     closedPosition: new THREE.Vector3(0, -HALF_SIZE, 0),
     normal: new THREE.Vector3(0, -1, 0),
-    stagger: 0.16,
     openPosition: new THREE.Vector3(-0.18, -2.65, 0.08),
     closedRotation: new THREE.Euler(Math.PI / 2, 0, 0),
     openRotation: new THREE.Euler(Math.PI / 2 + 0.28, -0.18, 0.2)
@@ -100,8 +88,8 @@ const getSettings = () => {
       unfoldedCameraZ: 9,
       cubeScale: 0.76,
       explodeDistance: 0.72,
-      rotationSpeed: 0.0042,
-      unfoldedSpeed: 0.0011
+      rotationSpeed: 0.006,
+      unfoldedSpeed: 0.0018
     }
   }
 
@@ -111,8 +99,8 @@ const getSettings = () => {
       unfoldedCameraZ: 9.15,
       cubeScale: 0.84,
       explodeDistance: 0.86,
-      rotationSpeed: 0.0048,
-      unfoldedSpeed: 0.0012
+      rotationSpeed: 0.007,
+      unfoldedSpeed: 0.002
     }
   }
 
@@ -121,18 +109,12 @@ const getSettings = () => {
     unfoldedCameraZ: 8.75,
     cubeScale: 0.92,
     explodeDistance: 1,
-    rotationSpeed: 0.0052,
-    unfoldedSpeed: 0.0014
+    rotationSpeed: 0.008,
+    unfoldedSpeed: 0.0024
   }
 }
 
 const easeOutCubic = (value) => 1 - Math.pow(1 - value, 3)
-const clamp01 = (value) => THREE.MathUtils.clamp(value, 0, 1)
-const easeOutBack = (value) => {
-  const overshoot = 1.08
-  const shifted = value - 1
-  return 1 + (overshoot + 1) * shifted ** 3 + overshoot * shifted ** 2
-}
 
 const createBrushTexture = () => {
   const canvas = document.createElement('canvas')
@@ -140,30 +122,54 @@ const createBrushTexture = () => {
   canvas.height = TEXTURE_SIZE
 
   const context = canvas.getContext('2d')
-  context.fillStyle = '#59605b'
+  context.fillStyle = '#8b938d'
   context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
 
   for (let y = 0; y < TEXTURE_SIZE; y += 1) {
-    const fineBrush = Math.sin(y * 0.31) * 5 + Math.sin(y * 1.73) * 2
-    const shade = 112 + Math.round(fineBrush)
-    context.fillStyle = `rgba(${shade}, ${shade + 3}, ${shade}, ${y % 3 === 0 ? 0.2 : 0.09})`
+    const wave = Math.sin(y * 0.085) * 11 + Math.sin(y * 0.27) * 6
+    const shade = 142 + Math.round(wave)
+    context.fillStyle = `rgba(${shade}, ${shade}, ${shade}, ${y % 5 === 0 ? 0.24 : 0.13})`
     context.fillRect(0, y, TEXTURE_SIZE, 1)
   }
 
-  for (let y = 4; y < TEXTURE_SIZE; y += 11) {
-    const length = TEXTURE_SIZE * (0.58 + Math.sin(y * 0.17) * 0.18)
-    context.fillStyle = 'rgba(238, 243, 237, 0.08)'
-    context.fillRect((TEXTURE_SIZE - length) / 2, y, length, 1)
+  for (let y = 0; y < TEXTURE_SIZE; y += 7) {
+    const offset = Math.sin(y * 0.37) * 18
+    context.fillStyle = 'rgba(255, 255, 255, 0.09)'
+    context.fillRect(Math.max(0, offset), y, TEXTURE_SIZE - Math.abs(offset), 1)
   }
 
   context.globalCompositeOperation = 'screen'
-  const reflectionBand = context.createLinearGradient(0, 0, TEXTURE_SIZE, 0)
-  reflectionBand.addColorStop(0, 'rgba(255,255,255,0.015)')
-  reflectionBand.addColorStop(0.34, 'rgba(255,255,255,0.035)')
-  reflectionBand.addColorStop(0.48, 'rgba(255,255,255,0.2)')
-  reflectionBand.addColorStop(0.56, 'rgba(255,255,255,0.055)')
-  reflectionBand.addColorStop(1, 'rgba(255,255,255,0.02)')
-  context.fillStyle = reflectionBand
+  const diagonalGlint = context.createLinearGradient(0, TEXTURE_SIZE, TEXTURE_SIZE, 0)
+  diagonalGlint.addColorStop(0, 'rgba(255,255,255,0.02)')
+  diagonalGlint.addColorStop(0.34, 'rgba(255,255,255,0.05)')
+  diagonalGlint.addColorStop(0.52, 'rgba(255,255,255,0.2)')
+  diagonalGlint.addColorStop(0.68, 'rgba(255,255,255,0.07)')
+  diagonalGlint.addColorStop(1, 'rgba(255,255,255,0.03)')
+  context.fillStyle = diagonalGlint
+  context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
+
+  const edgeSheen = context.createLinearGradient(0, 0, TEXTURE_SIZE, 0)
+  edgeSheen.addColorStop(0, 'rgba(255,255,255,0.14)')
+  edgeSheen.addColorStop(0.16, 'rgba(255,255,255,0.03)')
+  edgeSheen.addColorStop(0.78, 'rgba(255,255,255,0.02)')
+  edgeSheen.addColorStop(1, 'rgba(255,255,255,0.18)')
+  context.fillStyle = edgeSheen
+  context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
+
+  context.globalCompositeOperation = 'multiply'
+  const edgeDepth = context.createLinearGradient(0, 0, 0, TEXTURE_SIZE)
+  edgeDepth.addColorStop(0, 'rgba(0,0,0,0.1)')
+  edgeDepth.addColorStop(0.48, 'rgba(255,255,255,1)')
+  edgeDepth.addColorStop(1, 'rgba(0,0,0,0.18)')
+  context.fillStyle = edgeDepth
+  context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
+
+  context.globalCompositeOperation = 'screen'
+  const highlight = context.createLinearGradient(0, 0, TEXTURE_SIZE, 0)
+  highlight.addColorStop(0, 'rgba(255,255,255,0.03)')
+  highlight.addColorStop(0.5, 'rgba(255,255,255,0.12)')
+  highlight.addColorStop(1, 'rgba(255,255,255,0.04)')
+  context.fillStyle = highlight
   context.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)
 
   const texture = new THREE.CanvasTexture(canvas)
@@ -181,26 +187,24 @@ const createReflectionTexture = () => {
   canvas.height = TEXTURE_SIZE
 
   const context = canvas.getContext('2d')
-  const reflectionBand = context.createLinearGradient(0, 0, canvas.width, 0)
-  reflectionBand.addColorStop(0, '#050706')
-  reflectionBand.addColorStop(0.12, '#1d221f')
-  reflectionBand.addColorStop(0.2, '#d9e0d8')
-  reflectionBand.addColorStop(0.235, '#737b74')
-  reflectionBand.addColorStop(0.43, '#0b0e0c')
-  reflectionBand.addColorStop(0.57, '#bbc3bc')
-  reflectionBand.addColorStop(0.61, '#eef2ec')
-  reflectionBand.addColorStop(0.69, '#343a36')
-  reflectionBand.addColorStop(0.84, '#070908')
-  reflectionBand.addColorStop(1, '#8e9790')
-  context.fillStyle = reflectionBand
+  const sky = context.createLinearGradient(0, 0, canvas.width, 0)
+  sky.addColorStop(0, '#050606')
+  sky.addColorStop(0.16, '#acb5ac')
+  sky.addColorStop(0.25, '#5d655f')
+  sky.addColorStop(0.42, '#111413')
+  sky.addColorStop(0.56, '#c3cbc0')
+  sky.addColorStop(0.68, '#7a837c')
+  sky.addColorStop(0.82, '#090b0b')
+  sky.addColorStop(1, '#cbd0c6')
+  context.fillStyle = sky
   context.fillRect(0, 0, canvas.width, canvas.height)
 
-  const verticalFalloff = context.createLinearGradient(0, 0, 0, canvas.height)
-  verticalFalloff.addColorStop(0, 'rgba(255,255,255,0.2)')
-  verticalFalloff.addColorStop(0.42, 'rgba(255,255,255,0.025)')
-  verticalFalloff.addColorStop(0.58, 'rgba(0,0,0,0.32)')
-  verticalFalloff.addColorStop(1, 'rgba(0,0,0,0.78)')
-  context.fillStyle = verticalFalloff
+  const horizon = context.createLinearGradient(0, 0, 0, canvas.height)
+  horizon.addColorStop(0, 'rgba(255,255,255,0.18)')
+  horizon.addColorStop(0.48, 'rgba(255,255,255,0.02)')
+  horizon.addColorStop(0.54, 'rgba(0,0,0,0.36)')
+  horizon.addColorStop(1, 'rgba(0,0,0,0.74)')
+  context.fillStyle = horizon
   context.fillRect(0, 0, canvas.width, canvas.height)
 
   const texture = new THREE.CanvasTexture(canvas)
@@ -222,49 +226,25 @@ const updateFaceTargets = () => {
   }
 }
 
-const getFaceProgress = (stagger) => {
-  const duration = 0.84
-  return easeOutBack(clamp01((unfoldProgress - stagger) / duration))
-}
-
-const updateCoreSpokes = (visibility) => {
-  if (!coreSpokes || !cubeGroup) return
-  const positions = coreSpokes.geometry.attributes.position.array
-
-  cubeGroup.userData.faces.forEach((face, index) => {
-    const offset = index * 6
-    positions[offset] = 0
-    positions[offset + 1] = 0
-    positions[offset + 2] = 0
-    positions[offset + 3] = face.position.x * 0.82
-    positions[offset + 4] = face.position.y * 0.82
-    positions[offset + 5] = face.position.z * 0.82
-  })
-
-  coreSpokes.geometry.attributes.position.needsUpdate = true
-  coreSpokes.material.opacity = visibility * 0.52
-}
-
 const updateFaceTransforms = () => {
   if (!cubeGroup) return
 
+  const eased = easeOutCubic(unfoldProgress)
+
   for (const face of cubeGroup.userData.faces) {
     const { definition, openPosition } = face.userData
-    const faceProgress = getFaceProgress(definition.stagger)
-    face.position.lerpVectors(definition.closedPosition, openPosition, faceProgress)
+    face.position.lerpVectors(definition.closedPosition, openPosition, eased)
     face.rotation.set(
-      THREE.MathUtils.lerp(definition.closedRotation.x, definition.openRotation.x, faceProgress),
-      THREE.MathUtils.lerp(definition.closedRotation.y, definition.openRotation.y, faceProgress),
-      THREE.MathUtils.lerp(definition.closedRotation.z, definition.openRotation.z, faceProgress)
+      THREE.MathUtils.lerp(definition.closedRotation.x, definition.openRotation.x, eased),
+      THREE.MathUtils.lerp(definition.closedRotation.y, definition.openRotation.y, eased),
+      THREE.MathUtils.lerp(definition.closedRotation.z, definition.openRotation.z, eased)
     )
   }
 
-  const coreVisibility = THREE.MathUtils.smoothstep(unfoldProgress, 0.28, 0.82)
   if (core) {
-    core.scale.setScalar(THREE.MathUtils.lerp(0.55, 2.15, coreVisibility))
-    core.material.opacity = THREE.MathUtils.lerp(0.025, 0.72, coreVisibility)
+    core.scale.setScalar(THREE.MathUtils.lerp(0.7, 1.85, eased))
+    core.material.opacity = THREE.MathUtils.lerp(0.16, 0.42, eased)
   }
-  updateCoreSpokes(coreVisibility)
 }
 
 const renderOnce = () => {
@@ -297,15 +277,10 @@ const animate = (time) => {
   if (Math.abs(unfoldTarget - unfoldProgress) < 0.001) unfoldProgress = unfoldTarget
 
   const speed = THREE.MathUtils.lerp(settings.rotationSpeed, settings.unfoldedSpeed, unfoldProgress)
-  spinRotation += speed * delta
-  pointerTiltX += (-pointerTargetY * 0.055 - pointerTiltX) * 0.055 * delta
-  pointerTiltY += (pointerTargetX * 0.085 - pointerTiltY) * 0.055 * delta
-
   camera.position.z = THREE.MathUtils.lerp(settings.cameraZ, settings.unfoldedCameraZ, unfoldProgress)
-  cubeGroup.position.y = Math.sin(time * 0.00072) * 0.045 * (1 - unfoldProgress * 0.55)
-  cubeGroup.rotation.x = -0.26 + pointerTiltX + Math.sin(time * 0.0004) * 0.022
-  cubeGroup.rotation.y = spinRotation + pointerTiltY
-  cubeGroup.rotation.z = Math.sin(time * 0.00028) * 0.012
+  cubeGroup.rotation.y += speed * delta
+  cubeGroup.rotation.x = -0.26 + Math.sin(time * 0.00045) * 0.035
+  cubeGroup.rotation.z = Math.sin(time * 0.00032) * 0.018
 
   updateFaceTransforms()
   renderer.render(scene, camera)
@@ -336,19 +311,19 @@ const resizeRenderer = () => {
 const createFace = (definition) => {
   const plane = new THREE.PlaneGeometry(FACE_SIZE, FACE_SIZE, 18, 18)
   const material = new THREE.MeshPhysicalMaterial({
-    color: 0x9ba39c,
+    color: 0xb4bbb1,
     map: brushTexture,
     bumpMap: brushTexture,
-    bumpScale: 0.024,
+    bumpScale: 0.035,
     envMap: reflectionTexture,
-    anisotropy: 0.74,
+    anisotropy: 0.82,
     anisotropyRotation: Math.PI / 2,
-    metalness: 0.92,
-    roughness: 0.3,
-    clearcoat: 0.14,
-    clearcoatRoughness: 0.28,
-    reflectivity: 0.76,
-    envMapIntensity: 1.38,
+    metalness: 0.86,
+    roughness: 0.2,
+    clearcoat: 0.28,
+    clearcoatRoughness: 0.16,
+    reflectivity: 0.82,
+    envMapIntensity: 1.22,
     side: THREE.DoubleSide
   })
   const mesh = new THREE.Mesh(plane, material)
@@ -356,9 +331,9 @@ const createFace = (definition) => {
   const edge = new THREE.LineSegments(
     new THREE.EdgesGeometry(plane),
     new THREE.LineBasicMaterial({
-      color: 0xe8eee8,
+      color: 0xffffff,
       transparent: true,
-      opacity: 0.18
+      opacity: 0.48
     })
   )
 
@@ -395,54 +370,36 @@ const createScene = () => {
   renderer.domElement.style.height = '100%'
   canvasHost.value.appendChild(renderer.domElement)
 
-  const hemisphereLight = new THREE.HemisphereLight(0xe6ece5, 0x080b09, 0.9)
-  scene.add(hemisphereLight)
+  scene.add(new THREE.AmbientLight(0xffffff, 0.58))
 
-  const keyLight = new THREE.DirectionalLight(0xffffff, 2.4)
-  keyLight.position.set(4.8, 6.2, 5.4)
+  const keyLight = new THREE.DirectionalLight(0xffffff, 2.15)
+  keyLight.position.set(4, 5, 6)
   scene.add(keyLight)
 
-  const rimLight = new THREE.DirectionalLight(ACCENT, 0.42)
-  rimLight.position.set(-4.5, 1.4, -5.2)
+  const rimLight = new THREE.DirectionalLight(ACCENT, 0.78)
+  rimLight.position.set(-3, 1.8, -4)
   scene.add(rimLight)
 
-  const fillLight = new THREE.PointLight(0xdde5df, 0.55, 16)
-  fillLight.position.set(0.8, -1.4, 4.8)
+  const fillLight = new THREE.PointLight(0xffffff, 0.86, 14)
+  fillLight.position.set(0.6, -1.6, 4.5)
   scene.add(fillLight)
 
   brushTexture = createBrushTexture()
-  brushTexture.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 8)
   reflectionTexture = createReflectionTexture()
   scene.environment = reflectionTexture
   cubeGroup = new THREE.Group()
   cubeGroup.name = 'brushed-metal-cube'
-  spinRotation = 0.52
-  cubeGroup.rotation.set(-0.26, spinRotation, 0)
+  cubeGroup.rotation.set(-0.26, 0.52, 0)
   cubeGroup.userData.faces = faceDefinitions.map(createFace)
   for (const face of cubeGroup.userData.faces) cubeGroup.add(face)
 
   const coreMaterial = new THREE.MeshBasicMaterial({
     color: ACCENT,
     transparent: true,
-    opacity: 0.025
+    opacity: 0.16
   })
   core = new THREE.Mesh(new THREE.SphereGeometry(0.085, 20, 20), coreMaterial)
   cubeGroup.add(core)
-
-  const spokeGeometry = new THREE.BufferGeometry()
-  const spokePositions = new Float32Array(faceDefinitions.length * 6)
-  const spokeAttribute = new THREE.BufferAttribute(spokePositions, 3)
-  spokeAttribute.setUsage(THREE.DynamicDrawUsage)
-  spokeGeometry.setAttribute('position', spokeAttribute)
-
-  const spokeMaterial = new THREE.LineBasicMaterial({
-    color: ACCENT,
-    transparent: true,
-    opacity: 0,
-    depthWrite: false
-  })
-  coreSpokes = new THREE.LineSegments(spokeGeometry, spokeMaterial)
-  cubeGroup.add(coreSpokes)
 
   scene.add(cubeGroup)
 }
@@ -458,20 +415,7 @@ const handlePointerEnter = (event) => {
   if (event.pointerType === 'mouse' || event.pointerType === 'pen') setUnfolded(true)
 }
 
-const handlePointerMove = (event) => {
-  if (reducedMotion.value || !root.value) return
-  const bounds = root.value.getBoundingClientRect()
-  pointerTargetX = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2
-  pointerTargetY = ((event.clientY - bounds.top) / bounds.height - 0.5) * 2
-}
-
-const resetPointerTarget = () => {
-  pointerTargetX = 0
-  pointerTargetY = 0
-}
-
 const handlePointerLeave = (event) => {
-  resetPointerTarget()
   if (event.pointerType === 'mouse' || event.pointerType === 'pen') setUnfolded(false)
 }
 
@@ -489,9 +433,6 @@ const handleMotionPreference = () => {
     unfoldTarget = 0
     unfoldProgress = 0
     isUnfolded.value = false
-    resetPointerTarget()
-    pointerTiltX = 0
-    pointerTiltY = 0
     renderOnce()
   } else {
     startAnimation()
@@ -535,11 +476,6 @@ const disposeThreeScene = () => {
   brushTexture = null
   reflectionTexture = null
   core = null
-  coreSpokes = null
-  pointerTargetX = 0
-  pointerTargetY = 0
-  pointerTiltX = 0
-  pointerTiltY = 0
 }
 
 onMounted(() => {
@@ -580,7 +516,6 @@ onBeforeUnmount(disposeThreeScene)
     }"
     aria-hidden="true"
     @pointerenter="handlePointerEnter"
-    @pointermove="handlePointerMove"
     @pointerleave="handlePointerLeave"
     @pointerdown="triggerTouchUnfold"
   >
@@ -634,13 +569,13 @@ onBeforeUnmount(disposeThreeScene)
   position: absolute;
   width: min(220px, 44vw);
   aspect-ratio: 1;
-  border: 1px solid rgba(232, 238, 232, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.32);
   background:
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 6px),
-    linear-gradient(145deg, #aeb6ae, #434a45 42%, #111513 78%, #737b74);
+    repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 8px),
+    linear-gradient(135deg, #f4f4ee, #858d89 30%, #171a1a 68%, #d9ddd6);
   box-shadow:
-    inset 0 0 28px rgba(255, 255, 255, 0.08),
-    0 30px 64px rgba(0, 0, 0, 0.56);
+    inset 0 0 24px rgba(255, 255, 255, 0.16),
+    0 26px 60px rgba(0, 0, 0, 0.48);
   transform-style: preserve-3d;
 }
 
@@ -664,9 +599,7 @@ onBeforeUnmount(disposeThreeScene)
   height: 14px;
   border-radius: 50%;
   background: #d6ff00;
-  box-shadow:
-    0 0 18px rgba(214, 255, 0, 0.46),
-    0 0 42px rgba(214, 255, 0, 0.22);
+  box-shadow: 0 0 34px rgba(214, 255, 0, 0.72);
 }
 
 @media (max-width: 720px) {

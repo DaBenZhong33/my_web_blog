@@ -644,9 +644,9 @@ onUnmounted(() => {
 
 .hero-cube {
   position: absolute;
-  right: 0;
-  bottom: -28px;
-  width: min(680px, 52vw);
+  right: -22px;
+  bottom: -72px;
+  width: min(760px, 58vw);
   aspect-ratio: 1;
   max-width: none;
   pointer-events: auto;
@@ -1292,9 +1292,9 @@ onUnmounted(() => {
 
   .hero-cube {
     right: 50%;
-    bottom: -38px;
+    bottom: -72px;
     transform: translateX(50%);
-    width: min(620px, 90vw);
+    width: min(720px, 96vw);
   }
 
   .capability-row,
@@ -1361,12 +1361,12 @@ onUnmounted(() => {
   }
 
   .hero-visual {
-    min-height: 400px;
+    min-height: 420px;
   }
 
   .hero-cube {
-    bottom: 24px;
-    width: min(390px, 98vw);
+    bottom: 8px;
+    width: min(430px, 104vw);
   }
 
   .hero-wordmark {

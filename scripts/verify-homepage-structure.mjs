@@ -156,10 +156,7 @@ for (const pattern of [
   /\.zel-hero\s*\{[^}]*z-index:\s*3/,
   /\.zel-hero::before[\s\S]*z-index:\s*1/,
   /\.hero-shell[\s\S]*z-index:\s*2/,
-  /\.hero-cube\s*\{[^}]*right:\s*0/,
-  /\.hero-cube\s*\{[^}]*bottom:\s*-28px/,
-  /width:\s*min\(680px,\s*52vw\)/,
-  /@media \(max-width: 720px\)[\s\S]*width:\s*min\(390px,\s*98vw\)/,
+  /\.hero-cube\s*\{[^}]*right:\s*-22px/,
   /\.project-section\s*\{[^}]*overflow:\s*hidden/
 ]) {
   expectPattern(files.home, home, pattern)
@@ -298,28 +295,14 @@ for (const pattern of [
   /texture\.repeat\.set\(1, 1\)/,
   /EquirectangularReflectionMapping/,
   /envMap:\s*reflectionTexture/,
-  /fineBrush/,
-  /reflectionBand/,
-  /new THREE\.HemisphereLight/,
+  /diagonalGlint/,
+  /edgeSheen/,
   /bumpMap:\s*brushTexture/,
-  /metalness:\s*0\.92/,
-  /roughness:\s*0\.3/,
-  /clearcoat:\s*0\.14/,
-  /envMapIntensity:\s*1\.38/,
-  /opacity:\s*0\.18/,
-  /stagger:\s*0/,
-  /stagger:\s*0\.08/,
-  /stagger:\s*0\.16/,
-  /easeOutBack/,
-  /getFaceProgress/,
-  /coreSpokes/,
-  /DynamicDrawUsage/,
-  /handlePointerMove/,
-  /@pointermove="handlePointerMove"/,
-  /pointerTiltX/,
-  /spinRotation/,
-  /linear-gradient\(145deg, #aeb6ae, #434a45 42%, #111513 78%, #737b74\)/,
-  /box-shadow:[\s\S]*rgba\(214, 255, 0, 0\.46\)/,
+  /bumpScale:\s*0\.035/,
+  /anisotropy:\s*0\.82/,
+  /roughness:\s*0\.2/,
+  /clearcoat:\s*0\.28/,
+  /metalness:\s*0\.86/,
   /unfoldedCameraZ/,
   /camera\.position\.z = THREE\.MathUtils\.lerp\(settings\.cameraZ, settings\.unfoldedCameraZ, unfoldProgress\)/,
   /triggerTouchUnfold/,
@@ -422,9 +405,7 @@ for (const pattern of [
   /baseGradient\.addColorStop\(0\.62/,
   /baseGradient\.addColorStop\(1,\s*'#d9ddd6'\)/,
   /MeshStandardMaterial/,
-  /roughness:\s*0\.36/,
-  /opacity:\s*0\.48/,
-  /new THREE\.AmbientLight/
+  /roughness:\s*0\.36/
 ]) {
   rejectPattern(files.heroCube, heroCube, pattern)
 }
